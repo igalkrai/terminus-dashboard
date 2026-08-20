@@ -35,8 +35,23 @@ Changes:
 ## Extension: "Home Dashboard"
 
 Rather than hand-rolling clock rendering from scratch, we reuse an existing
-public recipe for the clock piece and only build the battery piece custom
-(battery is internal device data with no public-recipe fit):
+public recipe for the clock piece and only build the battery piece custom.
+
+**Why not import a public battery recipe too:** public battery recipes
+(e.g. `trmnl.com/recipes/29604` "Battery Status") depend on TRMNL Core's
+hosted `trmnl.device` system variables. Self-hosted/BYOS implementations
+don't expose these — this is a known, currently-unresolved gap flagged by
+another open-source TRMNL server project
+(`github.com/usetrmnl/larapaper` issue #176, "Expose TRMNL device variables
+for plugins"). The recipe's own page shows no visible Liquid template and
+its only configurable setting is an unrelated joke field ("Magic
+Temperature Key — you can put anything here"), so there's no template to
+port even if the variable gap were closed. Importing it would not work
+without exactly the backend change this design already adds — and even
+then we couldn't confirm what variable names its template expects — so
+building the battery piece custom against our own newly-exposed `device`
+context is the reliable path, not a case of skipping something that
+already works:
 
 1. **Import the public "Digital Clock" recipe** (`trmnl.com/recipes/190574`)
    via the existing Gallery import flow (`app/actions/extensions/gallery/index.rb`,
