@@ -53,7 +53,17 @@ public recipe for the clock piece and only build the battery piece custom
      template, configured for 24-hour time + date.
    - Right column: a new battery section using
      `{{ device.battery_percentage }}` and `{{ device.charging }}` from the
-     context added in the backend change above.
+     context added in the backend change above, rendered as:
+     - Large percentage text (e.g. "87%").
+     - Below it, a plain HTML/CSS bar — an outlined container `div` with an
+       inner `div` whose `width` is set to `{{ device.battery_percentage }}%`
+       inline via Liquid — filled solid black (this pipeline renders to
+       1-bit/greyscale via `app/aspects/screens/converters/monochrome.rb`,
+       so no icon fonts or SVGs; a plain filled/outlined bar reproduces
+       cleanly under dithering, unlike a `<meter>` element which has
+       inconsistent cross-renderer default styling).
+     - `{% if device.charging %}` a "Charging" label above the bar, else
+       nothing extra.
 4. After porting the clock markup into the dashboard template, delete the
    standalone imported "Digital Clock" extension so there isn't a duplicate,
    unused screen left behind.
