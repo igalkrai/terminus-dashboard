@@ -21,7 +21,8 @@ RSpec.describe Terminus::Aspects::Extensions::Renderer, :db do
           "data" => {}
         },
         "screen_variables" => "",
-        "sensors" => []
+        "sensors" => [],
+        "device" => nil
       }
     end
 

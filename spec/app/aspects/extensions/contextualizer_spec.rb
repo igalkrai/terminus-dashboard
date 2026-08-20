@@ -54,11 +54,18 @@ RSpec.describe Terminus::Aspects::Extensions::Contextualizer, :db do
             "source" => "device",
             "created_at" => Time.new(2025, 1, 1).utc
           }
-        ]
+        ],
+        "device" => {
+          "device_id" => device.id,
+          "battery_charge" => device.battery_charge,
+          "battery_voltage" => device.battery_voltage,
+          "battery_percentage" => device.battery_percentage,
+          "charging" => device.charging
+        }
       )
     end
 
-    it "answers attributes without fields, values, model, and sensors" do
+    it "answers attributes without fields, values, model, sensors, and device" do
       extension = Factory.structs[:extension, label: "Test"]
 
       expect(contextualizer.call(extension)).to eq(
@@ -70,7 +77,8 @@ RSpec.describe Terminus::Aspects::Extensions::Contextualizer, :db do
           "values" => {}
         },
         "screen_variables" => nil,
-        "sensors" => []
+        "sensors" => [],
+        "device" => nil
       )
     end
   end
