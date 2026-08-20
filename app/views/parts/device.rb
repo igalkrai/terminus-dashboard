@@ -18,10 +18,6 @@ module Terminus
           "Battery (#{helpers.format_number battery_percentage, precision: 0}%)"
         end
 
-        def battery_percentage
-          battery_charge.positive? ? battery_charge : battery_voltage_to_percent
-        end
-
         def formatted_display_profile = display_profile.capitalize
 
         def formatted_touch_bar = touch_bar.capitalize
@@ -54,24 +50,6 @@ module Terminus
         def current_screen
           fetcher.call(value).either -> screen { screen },
                                      proc { placeholder.with id: id }
-        end
-
-        private
-
-        def battery_voltage_to_percent
-          case battery_voltage
-            when 0 then 0
-            when ..0.45 then 10
-            when ..0.9 then 20
-            when ..1.35 then 30
-            when ..1.8 then 40
-            when ..2.25 then 50
-            when ..2.7 then 60
-            when ..3.15 then 70
-            when ..3.6 then 80
-            when ..4.05 then 90
-            else 100
-          end
         end
       end
     end
