@@ -114,12 +114,7 @@ RSpec.describe Terminus::Structs::Device, :db do
 
   describe "#liquid_attributes" do
     it "answers attributes" do
-      device = Factory.structs[
-        :device,
-        battery_charge: 0,
-        battery_voltage: 3.0,
-        charging: false
-      ]
+      device = Factory.structs[:device, battery_charge: 0, battery_voltage: 3.0, charging: false]
 
       expect(device.liquid_attributes).to eq(
         "device_id" => device.id,
