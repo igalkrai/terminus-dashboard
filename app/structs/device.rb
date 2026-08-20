@@ -1,11 +1,14 @@
 # frozen_string_literal: true
 
 require "core"
+require "refinements/hash"
 
 module Terminus
   module Structs
     # The device struct.
     class Device < DB::Struct
+      using Refinements::Hash
+
       def asleep? at = Time.now, type: Sequel::SQLTime
         return false unless sleep_start_at && sleep_stop_at
 
@@ -18,6 +21,10 @@ module Terminus
         end
       end
 
+      def battery_percentage
+        battery_charge.positive? ? battery_charge : battery_voltage_to_percent
+      end
+
       def display_attributes
         {
           image_url_timeout: image_timeout,
@@ -27,6 +34,11 @@ module Terminus
           touchbar_mode: touch_bar,
           update_firmware: firmware_update
         }
+      end
+
+      def liquid_attributes
+        {device_id: id, battery_charge:, battery_voltage:, battery_percentage:, charging:}
+          .stringify_keys!
       end
 
       def slug
@@ -47,6 +59,24 @@ module Terminus
           name: screen_name(kind),
           kind:
         }
+      end
+
+      private
+
+      def battery_voltage_to_percent
+        case battery_voltage
+          when 0 then 0
+          when ..0.45 then 10
+          when ..0.9 then 20
+          when ..1.35 then 30
+          when ..1.8 then 40
+          when ..2.25 then 50
+          when ..2.7 then 60
+          when ..3.15 then 70
+          when ..3.6 then 80
+          when ..4.05 then 90
+          else 100
+        end
       end
     end
   end

@@ -94,4 +94,40 @@ RSpec.describe Terminus::Structs::Device, :db do
       )
     end
   end
+
+  describe "#battery_percentage" do
+    it "answers battery_charge when it is positive" do
+      device = Factory.structs[:device, battery_charge: 42.0, battery_voltage: 3.0]
+      expect(device.battery_percentage).to eq(42.0)
+    end
+
+    it "answers a voltage-derived percentage when battery_charge is zero" do
+      device = Factory.structs[:device, battery_charge: 0, battery_voltage: 3.0]
+      expect(device.battery_percentage).to eq(70)
+    end
+
+    it "answers zero when battery_voltage is zero" do
+      device = Factory.structs[:device, battery_charge: 0, battery_voltage: 0]
+      expect(device.battery_percentage).to eq(0)
+    end
+  end
+
+  describe "#liquid_attributes" do
+    it "answers attributes" do
+      device = Factory.structs[
+        :device,
+        battery_charge: 0,
+        battery_voltage: 3.0,
+        charging: false
+      ]
+
+      expect(device.liquid_attributes).to eq(
+        "device_id" => device.id,
+        "battery_charge" => 0,
+        "battery_voltage" => 3.0,
+        "battery_percentage" => 70,
+        "charging" => false
+      )
+    end
+  end
 end
