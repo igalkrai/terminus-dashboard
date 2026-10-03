@@ -459,7 +459,7 @@
     <div class="layout">
       <div class="grid grid--cols-6 h--full" dir="rtl">
         <div class="col col--start gap text--center">
-          <span class="title">{{ extension.values.city }}</span>
+          <span class="title">היום</span>
           <div class="w--full">
             <img class="weather-icon-forecast" src="https://usetrmnl.com/images/plugins/weather/{{ image_day[0] }}">
             <br/>
