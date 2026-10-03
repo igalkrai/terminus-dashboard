@@ -396,55 +396,55 @@
         if code == 0 or code == 1
           if is_day == 1
             assign image_day = image_day | append: "wi-day-sunny.svg,"
-            assign condition = condition | append: "Sunny,"
+            assign condition = condition | append: "שמשי,"
           else
             assign image_day = image_day | append: "wi-night-clear.svg,"
-            assign condition = condition | append: "Clear,"
+            assign condition = condition | append: "בהיר,"
           endif
         elsif code == 2 or code == 3
-          assign condition = condition | append: "Cloudy,"
+          assign condition = condition | append: "מעונן,"
           if is_day == 1
             assign image_day = image_day | append: "wi-day-cloudy.svg,"
           else
             assign image_day = image_day | append: "wi-night-cloudy.svg,"
           endif
         elsif code == 45 or code == 48
-          assign condition = condition | append: "Fog,"
+          assign condition = condition | append: "ערפל,"
           if is_day == 1
             assign image_day = image_day | append: "wi-day-fog.svg,"
           else
             assign image_day = image_day | append: "wi-night-fog.svg,"
           endif
         elsif code >= 51 and code <= 67
-          assign condition = condition | append: "Rain,"
+          assign condition = condition | append: "גשם,"
           if is_day == 1
             assign image_day = image_day | append: "wi-day-rain.svg,"
           else
             assign image_day = image_day | append: "wi-night-rain.svg,"
           endif
         elsif code >= 71 and code <= 77
-          assign condition = condition | append: "Snow,"
+          assign condition = condition | append: "שלג,"
           if is_day == 1
             assign image_day = image_day | append: "wi-day-snow.svg,"
           else
             assign image_day = image_day | append: "wi-night-snow.svg,"
           endif
         elsif code >= 80 and code <= 82
-          assign condition = condition | append: "Rain,"
+          assign condition = condition | append: "גשם,"
           if is_day == 1
             assign image_day = image_day | append: "wi-day-rain.svg,"
           else
             assign image_day = image_day | append: "wi-night-rain.svg,"
           endif
         elsif code >= 85 and code <= 86
-          assign condition = condition | append: "Snow,"
+          assign condition = condition | append: "שלג,"
           if is_day == 1
             assign image_day = image_day | append: "wi-day-snow.svg,"
           else
             assign image_day = image_day | append: "wi-night-snow.svg,"
           endif
         else
-          assign condition = condition | append: "Storm,"
+          assign condition = condition | append: "סערה,"
           if is_day == 1
             assign image_day = image_day | append: "wi-day-thunderstorm.svg,"
           else
@@ -479,7 +479,8 @@
         </div>
         {% for i in (1..5) %}
         <div class="col col--start gap text--center">
-          <span class="title">{{ daily.time[i] | date: "%a" }}</span>
+          {%- assign day_idx = daily.time[i] | date: "%w" | plus: 0 -%}
+          <span class="title">{{ he_days[day_idx] }}</span>
           <div class="w--full">
             <img class="weather-icon-forecast" src="https://usetrmnl.com/images/plugins/weather/{{ image_day[i] }}">
             <br/>
