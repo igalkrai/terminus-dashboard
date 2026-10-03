@@ -323,7 +323,6 @@
 
 <div class="{{ extension.css_classes }}">
   <div class="view view--full">
-    <div class="layout layout--col layout--center">
     <div class="layout layout--row layout--center">
       {%- assign clock_hour = "now" | date: "%H" | plus: 0 | modulo: 12 -%}
       {%- assign clock_minute = "now" | date: "%M" | plus: 0 -%}
@@ -390,7 +389,6 @@
       <span class="label">גבוה {{ source_1.daily.temperature_2m_max[0] | round }}°</span>
       <span class="label">נמוך {{ source_1.daily.temperature_2m_min[0] | round }}°</span>
       <span class="label">גשם {{ source_1.daily.precipitation_probability_max[0] }}%</span>
-    </div>
     </div>
   </div>
 </div>
