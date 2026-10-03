@@ -323,6 +323,7 @@
 
 <div class="{{ extension.css_classes }}">
   <div class="view view--full">
+    <div class="layout layout--col layout--center">
     <div class="layout layout--row layout--center">
       {%- assign clock_hour = "now" | date: "%H" | plus: 0 | modulo: 12 -%}
       {%- assign clock_minute = "now" | date: "%M" | plus: 0 -%}
@@ -371,6 +372,25 @@
           <div class="fill" style="width: {{ device.battery_percentage | round }}%"></div>
         </div>
       </div>
+    </div>
+
+    <div class="layout layout--row layout--center gap">
+      {%- assign code = source_1.current.weather_code | plus: 0 -%}
+      {%- if code == 0 -%}{%- assign sky = "בהיר" -%}
+      {%- elsif code <= 3 -%}{%- assign sky = "מעונן חלקית" -%}
+      {%- elsif code <= 48 -%}{%- assign sky = "ערפל" -%}
+      {%- elsif code <= 57 -%}{%- assign sky = "טפטוף" -%}
+      {%- elsif code <= 67 -%}{%- assign sky = "גשם" -%}
+      {%- elsif code <= 77 -%}{%- assign sky = "שלג" -%}
+      {%- elsif code <= 82 -%}{%- assign sky = "ממטרים" -%}
+      {%- else -%}{%- assign sky = "סופת רעמים" -%}
+      {%- endif -%}
+      <span class="label">{{ extension.values.city }}</span>
+      <span class="title title--large">{{ source_1.current.temperature_2m | round }}° {{ sky }}</span>
+      <span class="label">גבוה {{ source_1.daily.temperature_2m_max[0] | round }}°</span>
+      <span class="label">נמוך {{ source_1.daily.temperature_2m_min[0] | round }}°</span>
+      <span class="label">גשם {{ source_1.daily.precipitation_probability_max[0] }}%</span>
+    </div>
     </div>
   </div>
 </div>
