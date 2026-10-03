@@ -373,22 +373,132 @@
       </div>
     </div>
 
-    <div class="layout layout--row layout--center gap">
-      {%- assign code = source_1.current.weather_code | plus: 0 -%}
-      {%- if code == 0 -%}{%- assign sky = "בהיר" -%}
-      {%- elsif code <= 3 -%}{%- assign sky = "מעונן חלקית" -%}
-      {%- elsif code <= 48 -%}{%- assign sky = "ערפל" -%}
-      {%- elsif code <= 57 -%}{%- assign sky = "טפטוף" -%}
-      {%- elsif code <= 67 -%}{%- assign sky = "גשם" -%}
-      {%- elsif code <= 77 -%}{%- assign sky = "שלג" -%}
-      {%- elsif code <= 82 -%}{%- assign sky = "ממטרים" -%}
-      {%- else -%}{%- assign sky = "סופת רעמים" -%}
-      {%- endif -%}
-      <span class="label">{{ extension.values.city }}</span>
-      <span class="title title--large">{{ source_1.current.temperature_2m | round }}° {{ sky }}</span>
-      <span class="label">גבוה {{ source_1.daily.temperature_2m_max[0] | round }}°</span>
-      <span class="label">נמוך {{ source_1.daily.temperature_2m_min[0] | round }}°</span>
-      <span class="label">גשם {{ source_1.daily.precipitation_probability_max[0] }}%</span>
+    <style>
+      .screen--lg .weather-icon-mini { width: 34px; }
+      .weather-icon-mini { width: 24px; }
+      .screen--lg .weather-icon-forecast { width: 100px; }
+      .weather-icon-forecast { width: 50px; }
+    </style>
+    {%- assign current = source_1.current -%}
+    {%- assign daily = source_1.daily -%}
+    {%- liquid
+      assign is_day = current.is_day
+      assign image_day = ""
+      assign condition = ""
+
+      for i in (0..5)
+        if i == 0
+          assign code = current.weather_code
+        else
+          assign code = daily.weather_code[i]
+        endif
+
+        if code == 0 or code == 1
+          if is_day == 1
+            assign image_day = image_day | append: "wi-day-sunny.svg,"
+            assign condition = condition | append: "Sunny,"
+          else
+            assign image_day = image_day | append: "wi-night-clear.svg,"
+            assign condition = condition | append: "Clear,"
+          endif
+        elsif code == 2 or code == 3
+          assign condition = condition | append: "Cloudy,"
+          if is_day == 1
+            assign image_day = image_day | append: "wi-day-cloudy.svg,"
+          else
+            assign image_day = image_day | append: "wi-night-cloudy.svg,"
+          endif
+        elsif code == 45 or code == 48
+          assign condition = condition | append: "Fog,"
+          if is_day == 1
+            assign image_day = image_day | append: "wi-day-fog.svg,"
+          else
+            assign image_day = image_day | append: "wi-night-fog.svg,"
+          endif
+        elsif code >= 51 and code <= 67
+          assign condition = condition | append: "Rain,"
+          if is_day == 1
+            assign image_day = image_day | append: "wi-day-rain.svg,"
+          else
+            assign image_day = image_day | append: "wi-night-rain.svg,"
+          endif
+        elsif code >= 71 and code <= 77
+          assign condition = condition | append: "Snow,"
+          if is_day == 1
+            assign image_day = image_day | append: "wi-day-snow.svg,"
+          else
+            assign image_day = image_day | append: "wi-night-snow.svg,"
+          endif
+        elsif code >= 80 and code <= 82
+          assign condition = condition | append: "Rain,"
+          if is_day == 1
+            assign image_day = image_day | append: "wi-day-rain.svg,"
+          else
+            assign image_day = image_day | append: "wi-night-rain.svg,"
+          endif
+        elsif code >= 85 and code <= 86
+          assign condition = condition | append: "Snow,"
+          if is_day == 1
+            assign image_day = image_day | append: "wi-day-snow.svg,"
+          else
+            assign image_day = image_day | append: "wi-night-snow.svg,"
+          endif
+        else
+          assign condition = condition | append: "Storm,"
+          if is_day == 1
+            assign image_day = image_day | append: "wi-day-thunderstorm.svg,"
+          else
+            assign image_day = image_day | append: "wi-night-thunderstorm.svg,"
+          endif
+        endif
+      endfor
+
+      assign image_day = image_day | split: ","
+      assign condition = condition | split: ","
+    -%}
+    <div class="layout">
+      <div class="grid grid--cols-6 h--full">
+        <div class="col col--start gap text--center">
+          <span class="title">{{ extension.values.city }}</span>
+          <div class="w--full">
+            <img class="weather-icon-forecast" src="https://usetrmnl.com/images/plugins/weather/{{ image_day[0] }}">
+            <br/>
+            <span class="description text-stroke">{{ condition[0] }}</span>
+          </div>
+          <div class="w--full">
+            <span class="value value--xsmall">{{ current.temperature_2m | round }}°</span>
+          </div>
+          <div class="w--full">
+            <div class="flex flex--row gap--xsmall">
+              <img class="weather-icon-mini" src="https://usetrmnl.com/images/plugins/weather/wi-hot.svg">
+              <span class="value value--xxsmall mr--1">{{ daily.uv_index_max[0] | round }}</span>
+              <img class="weather-icon-mini" src="https://usetrmnl.com/images/plugins/weather/wi-rain.svg" />
+              <span class="value value--xxsmall">{{ daily.precipitation_probability_max[0] }}%</span>
+            </div>
+          </div>
+        </div>
+        {% for i in (1..5) %}
+        <div class="col col--start gap text--center">
+          <span class="title">{{ daily.time[i] | date: "%a" }}</span>
+          <div class="w--full">
+            <img class="weather-icon-forecast" src="https://usetrmnl.com/images/plugins/weather/{{ image_day[i] }}">
+            <br/>
+            <span class="description text-stroke">{{ condition[i] }}</span>
+          </div>
+          <div class="w--full">
+            <span class="value value--xsmall">{{ daily.temperature_2m_min[i] | round }}° / {{ daily.temperature_2m_max[i] | round }}°</span>
+          </div>
+          <div class="w--full">
+            <div class="flex flex--row gap--xsmall">
+              <img class="weather-icon-mini" src="https://usetrmnl.com/images/plugins/weather/wi-hot.svg">
+              <span class="value value--xxsmall mr--1">{{ daily.uv_index_max[i] | round }}</span>
+              <img class="weather-icon-mini" src="https://usetrmnl.com/images/plugins/weather/wi-rain.svg" />
+              <span class="value value--xxsmall">{{ daily.precipitation_probability_max[i] }}%</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
     </div>
   </div>
 </div>
