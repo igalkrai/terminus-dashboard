@@ -363,12 +363,13 @@
         <div class="title title--xlarge">משפחת קרייסלר</div>
       </div>
 
+      {%- assign battery = device.battery_percentage | round -%}
       <div class="progress-bar progress-bar--large">
         <div class="content">
-          <span class="value value--xxsmall">{{ device.battery_percentage | round }}%</span>
+          <span class="value value--xxsmall">{{ battery }}%</span>
         </div>
         <div class="track">
-          <div class="fill" style="width: {{ device.battery_percentage | round }}%"></div>
+          <div class="fill" style="width: {{ battery }}%"></div>
         </div>
       </div>
     </div>
@@ -383,6 +384,10 @@
     {%- assign daily = source_1.daily -%}
     {%- liquid
       assign is_day = current.is_day
+      assign prefix = "wi-night-"
+      if is_day == 1
+        assign prefix = "wi-day-"
+      endif
       assign image_day = ""
       assign condition = ""
 
@@ -395,62 +400,37 @@
 
         if code == 0 or code == 1
           if is_day == 1
-            assign image_day = image_day | append: "wi-day-sunny.svg,"
-            assign condition = condition | append: "שמשי,"
+            assign stem = "sunny"
+            assign label = "שמשי"
           else
-            assign image_day = image_day | append: "wi-night-clear.svg,"
-            assign condition = condition | append: "בהיר,"
+            assign stem = "clear"
+            assign label = "בהיר"
           endif
         elsif code == 2 or code == 3
-          assign condition = condition | append: "מעונן,"
-          if is_day == 1
-            assign image_day = image_day | append: "wi-day-cloudy.svg,"
-          else
-            assign image_day = image_day | append: "wi-night-cloudy.svg,"
-          endif
+          assign stem = "cloudy"
+          assign label = "מעונן"
         elsif code == 45 or code == 48
-          assign condition = condition | append: "ערפל,"
-          if is_day == 1
-            assign image_day = image_day | append: "wi-day-fog.svg,"
-          else
-            assign image_day = image_day | append: "wi-night-fog.svg,"
-          endif
+          assign stem = "fog"
+          assign label = "ערפל"
         elsif code >= 51 and code <= 67
-          assign condition = condition | append: "גשם,"
-          if is_day == 1
-            assign image_day = image_day | append: "wi-day-rain.svg,"
-          else
-            assign image_day = image_day | append: "wi-night-rain.svg,"
-          endif
+          assign stem = "rain"
+          assign label = "גשם"
         elsif code >= 71 and code <= 77
-          assign condition = condition | append: "שלג,"
-          if is_day == 1
-            assign image_day = image_day | append: "wi-day-snow.svg,"
-          else
-            assign image_day = image_day | append: "wi-night-snow.svg,"
-          endif
+          assign stem = "snow"
+          assign label = "שלג"
         elsif code >= 80 and code <= 82
-          assign condition = condition | append: "גשם,"
-          if is_day == 1
-            assign image_day = image_day | append: "wi-day-rain.svg,"
-          else
-            assign image_day = image_day | append: "wi-night-rain.svg,"
-          endif
+          assign stem = "rain"
+          assign label = "גשם"
         elsif code >= 85 and code <= 86
-          assign condition = condition | append: "שלג,"
-          if is_day == 1
-            assign image_day = image_day | append: "wi-day-snow.svg,"
-          else
-            assign image_day = image_day | append: "wi-night-snow.svg,"
-          endif
+          assign stem = "snow"
+          assign label = "שלג"
         else
-          assign condition = condition | append: "סערה,"
-          if is_day == 1
-            assign image_day = image_day | append: "wi-day-thunderstorm.svg,"
-          else
-            assign image_day = image_day | append: "wi-night-thunderstorm.svg,"
-          endif
+          assign stem = "thunderstorm"
+          assign label = "סערה"
         endif
+
+        assign image_day = image_day | append: prefix | append: stem | append: ".svg,"
+        assign condition = condition | append: label | append: ","
       endfor
 
       assign image_day = image_day | split: ","
@@ -458,36 +438,25 @@
     -%}
     <div class="layout">
       <div class="grid grid--cols-6 h--full" dir="rtl">
+        {% for i in (0..5) %}
         <div class="col col--start gap text--center">
+          {%- if i == 0 -%}
           <span class="title">היום</span>
-          <div class="w--full">
-            <img class="weather-icon-forecast" src="https://usetrmnl.com/images/plugins/weather/{{ image_day[0] }}">
-            <br/>
-            <span class="description text-stroke">{{ condition[0] }}</span>
-          </div>
-          <div class="w--full">
-            <span class="value value--xsmall">{{ current.temperature_2m | round }}°</span>
-          </div>
-          <div class="w--full">
-            <div class="flex flex--row gap--xsmall">
-              <img class="weather-icon-mini" src="https://usetrmnl.com/images/plugins/weather/wi-hot.svg">
-              <span class="value value--xxsmall mr--1">{{ daily.uv_index_max[0] | round }}</span>
-              <img class="weather-icon-mini" src="https://usetrmnl.com/images/plugins/weather/wi-rain.svg" />
-              <span class="value value--xxsmall">{{ daily.precipitation_probability_max[0] }}%</span>
-            </div>
-          </div>
-        </div>
-        {% for i in (1..5) %}
-        <div class="col col--start gap text--center">
+          {%- else -%}
           {%- assign day_idx = daily.time[i] | date: "%w" | plus: 0 -%}
           <span class="title">{{ he_days[day_idx] }}</span>
+          {%- endif -%}
           <div class="w--full">
             <img class="weather-icon-forecast" src="https://usetrmnl.com/images/plugins/weather/{{ image_day[i] }}">
             <br/>
             <span class="description text-stroke">{{ condition[i] }}</span>
           </div>
           <div class="w--full">
+            {%- if i == 0 -%}
+            <span class="value value--xsmall">{{ current.temperature_2m | round }}°</span>
+            {%- else -%}
             <span class="value value--xsmall">{{ daily.temperature_2m_min[i] | round }}° / {{ daily.temperature_2m_max[i] | round }}°</span>
+            {%- endif -%}
           </div>
           <div class="w--full">
             <div class="flex flex--row gap--xsmall">
