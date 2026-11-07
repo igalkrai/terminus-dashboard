@@ -1,0 +1,133 @@
+:toc: macro
+:toclevels: 5
+:figure-caption!:
+
+:oracle_link: link:https://www.oracle.com/cloud/free[Oracle Cloud Free Tier]
+:docker_link: link:https://www.docker.com[Docker]
+:doc_docker_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/docker.adoc[Docker]
+:doc_configuration_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/configuration.adoc[Configuration]
+
+= Oracle Cloud
+
+{oracle_link} offers an "Always Free" ARM VM (up to 4 OCPUs / 24GB RAM) that comfortably runs the full Terminus stack (web, worker, Postgres, Valkey) for $0/month, with no 30-day expiry on the database and no paid worker tier. This is a good option if you want Terminus reachable from the internet without keeping a personal machine powered on and online.
+
+Continue reading to learn more.
+
+toc::[]
+
+== Why Oracle over other free hosts
+
+* *Render* (see the {doc_configuration_link} deploy button) only offers the Sidekiq worker on a paid _starter_ plan, and its free Postgres expires after 30 days.
+* *Fly.io / Railway* no longer have free tiers usable for a multi-service stack.
+* *Koyeb*'s free tier (512MB) is too small for headless Chrome + Postgres + Valkey + Sidekiq running together.
+
+None of this is specific to Oracle being "better" infrastructure — it's simply the host with a free tier large enough to run every Terminus service at once.
+
+== Create the VM
+
+In the OCI console: *Compute → Instances → Create instance*.
+
+* *Image:* Canonical Ubuntu *24.04* (not 20.04 — Docker's install script no longer supports 20.04).
+* *Shape:* Change shape → *Ampere* → `VM.Standard.A1.Flex`. Set 2 OCPUs / 12GB (free tier allows up to 4/24). Confirm the shape card shows *"Always Free-eligible"* before creating — if it doesn't, you're about to be billed.
+* *Capacity type:* On-demand (not Preemptible — Oracle can reclaim a preemptible instance at any time).
+* *Networking:* keep "Create new virtual cloud network" / "Create new public subnet", with "Assign a public IPv4 address" checked.
+* *SSH keys:* "Generate a key pair for me", then *download the private key immediately* — it is shown only once.
+
+If creation fails with "Out of capacity", retry later or try a different availability domain; free ARM capacity is contended in some regions.
+
+== Networking
+
+A freshly created VCN's public subnet has no internet gateway by default, which makes every port — SSH included — time out from the outside, with no error on the instance itself.
+
+Fix via the VNIC's *Attached VNICs* page → *Quick actions* → *"Connect public subnet to internet" → Connect*. This creates the missing internet gateway, the `0.0.0.0/0` route, and a network security group in one step.
+
+Then open only the ports Terminus needs, in the subnet's *Security Lists → Default Security List → Security rules → Add Ingress Rules*:
+
+[cols="1,1,1", options="header"]
+|===
+| Source | Protocol | Port
+
+| `0.0.0.0/0`
+| TCP
+| 22 (SSH)
+
+| `0.0.0.0/0`
+| TCP
+| 2300 (Terminus web)
+|===
+
+*Never open 5432 (Postgres) or 6379 (Valkey/Redis).* `compose.yml` binds those to `0.0.0.0` on the host for local-network convenience, but the OCI security list is the actual firewall — leaving them closed keeps the databases unreachable from the internet even though the containers publish the ports.
+
+== Reserve a public IP
+
+The IP assigned at creation is ephemeral and can change. Swap it for a free reserved IP so `API_URI` and the device's Custom Server URL never have to change again:
+
+. VNIC → *IP administration* → the primary IP row → `⋯` → *Edit* → Public IP type: *No public IP* → Update.
+. `⋯` → *Edit* again → *Reserved public IP* → *Create new reserved IP* → Update.
+
+The IP shown afterwards is permanent. Use it for everything below.
+
+== Install Docker and deploy
+
+SSH in with the downloaded key (move it out of any project checkout first — a private key dropped into `~/code/some-repo/.ssh/` is easy to `git add -A` by accident):
+
+[source,bash]
+----
+ssh -i ~/.ssh/oci_terminus ubuntu@<RESERVED_IP>
+curl -fsSL https://get.docker.com | sudo sh && sudo usermod -aG docker ubuntu && exit
+----
+
+Reconnect (the group change needs a fresh session), then clone and bootstrap per the {doc_docker_link} guide:
+
+[source,bash]
+----
+ssh -i ~/.ssh/oci_terminus ubuntu@<RESERVED_IP>
+git clone <your-fork-or-origin-url> terminus && cd terminus
+bin/setup docker
+----
+
+=== Fix `API_URI` before starting the stack
+
+`bin/setup docker` writes `.env` using the VM's *private* IP (something like `10.0.0.x`), which devices on the internet can't reach. Edit `.env` to use the reserved public IP instead:
+
+[source,bash]
+----
+sed -i.bak 's|API_URI=http://10\.0\.0\.[0-9]*:\$HANAMI_PORT|API_URI=http://<RESERVED_IP>:$HANAMI_PORT|' .env
+grep API_URI .env   # confirm it now shows the public IP
+----
+
+Then bring the stack up:
+
+[source,bash]
+----
+docker compose up -d
+docker compose ps   # expect web, worker, database, keyvalue all healthy
+----
+
+== Register and migrate existing data
+
+The server is reachable the moment it's up, and *the first account to register gets full access* — register immediately at `http://<RESERVED_IP>:2300`.
+
+To bring over an existing local install (device, playlists, extensions) instead of starting fresh, dump and restore the database:
+
+[source,bash]
+----
+# on your local machine
+pg_dump -Fc terminus_development > ~/terminus.dump
+scp -i ~/.ssh/oci_terminus ~/terminus.dump ubuntu@<RESERVED_IP>:~/
+
+# on the VM
+docker compose exec -T database pg_restore -U terminus -d terminus --clean --no-owner < ~/terminus.dump
+docker compose restart web worker
+----
+
+This overwrites the throwaway account from registration with your existing data — log back in with your original credentials afterwards.
+
+Finally, point the physical device's *Custom Server URL* at `http://<RESERVED_IP>:2300`.
+
+== Troubleshooting
+
+* *Every port times out, including 22, right after creating the VM:* missing internet gateway — see <<Networking>>.
+* *SSH "Permission denied (publickey)":* the private key isn't where you think it is. Check the browser's actual download location before assuming the standard `~/.ssh/oci_terminus` path — it's easy for it to land in `~/Downloads` or inside a project checkout instead.
+* *Device shows a stale/blank screen after cutover:* the device's Custom Server URL still points at the old host. Update it in the TRMNL device settings, not just `.env`.
+* *Oracle reclaims an idle free VM:* can happen if usage stays under ~20% for 7+ days. Upgrading the account to Pay-As-You-Go stops this while staying at $0 within the free-tier limits.

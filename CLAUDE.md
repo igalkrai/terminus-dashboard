@@ -96,7 +96,7 @@ Pure CSS (no framework) in `app/assets/css`, bundled with esbuild via hanami-ass
 - Errors returned to clients use RFC 9457 problem details via the `petail` gem and the `:problem_details` action format registered in `config/app.rb`.
 - Follow the existing dry-monads `Result` + `pipeable` style for new service logic rather than raising/returning nils.
 - Firmware compatibility is a hard contract (Unbrickable Pledge): the latest Terminus supports the latest firmware — check `README.adoc` before touching firmware/display payload shapes.
-- Deeper topic docs live in `doc/*.adoc` (api, devices, extensions, jobs, configuration, docker, kubernetes, render, raspberry_pi).
+- Deeper topic docs live in `doc/*.adoc` (api, devices, extensions, jobs, configuration, docker, kubernetes, render, oracle_cloud, raspberry_pi).
 
 ## Agent skills
 
