@@ -4,8 +4,8 @@ require "hanami_helper"
 
 RSpec.describe Terminus::Structs::Firmware, :db do
   subject :firmware do
-    repository.create version: "1.2.3",
-                      attachment_data: Hanami.app[:shrine].upload(path.open, :store).data
+    attachment_data = path.open { Hanami.app[:shrine].upload(it, :store).data }
+    repository.create version: "1.2.3", attachment_data:
   end
 
   let(:repository) { Terminus::Repositories::Firmware.new }
@@ -41,7 +41,7 @@ RSpec.describe Terminus::Structs::Firmware, :db do
 
   describe "#attachment_id" do
     it "answers ID" do
-      expect(firmware.attachment_id).to match(/\h{32}\.bin/)
+      expect(firmware.attachment_id).to match_shrine_id(extension: :bin)
     end
 
     it "answers nil when there is no associated attachment" do
@@ -80,7 +80,7 @@ RSpec.describe Terminus::Structs::Firmware, :db do
 
   describe "#attachment_uri" do
     it "answers URI" do
-      expect(firmware.attachment_uri).to match(%r(memory://\h{32}\.bin))
+      expect(firmware.attachment_uri).to match_shrine_uri(extension: :bin)
     end
   end
 
@@ -88,11 +88,10 @@ RSpec.describe Terminus::Structs::Firmware, :db do
     it "attaches file" do
       path = temp_dir.join "test.bin"
       path.binwrite [123].pack("N")
-
-      upload = firmware.attach path.open
+      upload = path.open { firmware.attach it }
 
       expect(upload.data).to match(
-        "id" => /\h{32}\.bin/,
+        "id" => match_shrine_id(extension: :bin),
         "metadata" => {
           "filename" => "test.bin",
           "height" => nil,
@@ -107,10 +106,10 @@ RSpec.describe Terminus::Structs::Firmware, :db do
     it "updates attributes when valid" do
       path = temp_dir.join "test.bin"
       path.binwrite [123].pack("N")
-      firmware.attach path.open
+      path.open { firmware.attach it }
 
       expect(firmware.attachment_attributes).to match(
-        id: /\h{32}\.bin/,
+        id: match_shrine_id(extension: :bin),
         storage: "cache",
         metadata: {
           filename: "test.bin",
@@ -125,10 +124,10 @@ RSpec.describe Terminus::Structs::Firmware, :db do
 
   describe "#replace" do
     it "replaces file" do
-      instance = path.open { |io| firmware.replace io }
+      instance = path.open { firmware.replace it }
 
       expect(instance.attachment_attributes).to match(
-        id: /\h{32}\.bin/,
+        id: match_shrine_id(extension: :bin),
         metadata: {
           filename: "test.bin",
           size: 4,
@@ -142,7 +141,8 @@ RSpec.describe Terminus::Structs::Firmware, :db do
 
     it "updates storage ID" do
       id = firmware.attachment_id
-      instance = path.open { |io| firmware.replace io }
+      instance = path.open { firmware.replace it }
+
       expect(id).not_to eq(instance.attachment_id)
     end
   end
@@ -151,11 +151,10 @@ RSpec.describe Terminus::Structs::Firmware, :db do
     it "uploads file when valid" do
       path = temp_dir.join "test.bin"
       path.binwrite [123].pack("N")
-
-      upload = firmware.upload path.open
+      upload = path.open { firmware.upload it }
 
       expect(upload.data).to match(
-        "id" => /\h{32}\.bin/,
+        "id" => match_shrine_id(extension: :bin),
         "metadata" => {
           "filename" => "test.bin",
           "height" => nil,
@@ -170,10 +169,10 @@ RSpec.describe Terminus::Structs::Firmware, :db do
     it "updates attributes when valid" do
       path = temp_dir.join "test.bin"
       path.binwrite [123].pack("N")
-      firmware.upload path.open
+      path.open { firmware.upload it }
 
       expect(firmware.attachment_attributes).to match(
-        id: /\h{32}\.bin/,
+        id: match_shrine_id(extension: :bin),
         storage: "store",
         metadata: {
           filename: "test.bin",
@@ -189,7 +188,7 @@ RSpec.describe Terminus::Structs::Firmware, :db do
       upload = firmware.upload StringIO.new
 
       expect(upload.data).to match(
-        "id" => /\h{32}/,
+        "id" => match_shrine_id,
         "metadata" => {
           "filename" => nil,
           "height" => nil,
@@ -224,7 +223,7 @@ RSpec.describe Terminus::Structs::Firmware, :db do
     it "answers true with no errors" do
       path = temp_dir.join "test.bin"
       path.binwrite [123].pack("N")
-      firmware.attach path.open
+      path.open { firmware.attach it }
 
       expect(firmware.valid?).to be(true)
     end

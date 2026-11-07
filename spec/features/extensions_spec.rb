@@ -31,7 +31,8 @@ RSpec.describe "Extensions", :db do
     fill_in "extension[label]", with: nil
     click_button "Save"
 
-    expect(page).to have_text("must be filled")
+    expect(page).to have_text("Extension label must be filled")
+    expect(page).to have_text(/Label.+must be filled/m)
 
     fill_in "extension[label]", with: "Edit Test"
     click_button "Save"
@@ -63,7 +64,9 @@ RSpec.describe "Extensions", :db do
     extension
 
     visit routes.path(:extensions)
-    click_link "Clone"
+    within ".bit-card", text: extension.label do
+      click_link "Clone"
+    end
     fill_in "extension[label]", with: nil
     click_button "Save"
 
@@ -102,7 +105,9 @@ RSpec.describe "Extensions", :db do
     extension
 
     visit routes.path(:extensions)
-    click_link "Export"
+    within ".bit-card", text: extension.label do
+      click_link "Download"
+    end
 
     expect(page.source.encoding).to eq(Encoding::ASCII_8BIT)
   end

@@ -7,7 +7,7 @@ module Terminus
     module Parts
       # The playlist presenter.
       class Playlist < Hanami::View::Part
-        include Deps["aspects.screens.placeholder"]
+        include Deps["aspects.screens.faux"]
 
         def current_screen_pill item, label = "Current Screen"
           return unless current_item_id == item.id
@@ -20,7 +20,7 @@ module Terminus
           if current_item_id && respond_to?(:current_item)
             current_item.screen
           else
-            placeholder.with id:, uri: "blank.svg"
+            faux.with id:, uri: "blank.svg"
           end
         end
       end

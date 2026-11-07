@@ -21,7 +21,7 @@ RSpec.describe Terminus::Aspects::Screens::Converters::Color do
 
     it "converts to color image" do
       converter.call mold
-      image = MiniMagick::Image.open mold.output_path
+      image = MiniMagick::Image.new mold.output_path
 
       expect(image).to have_attributes(
         dimensions: [800, 480],
@@ -38,7 +38,7 @@ RSpec.describe Terminus::Aspects::Screens::Converters::Color do
 
     it "rotates image" do
       converter.call mold.with(rotation: 90)
-      image = MiniMagick::Image.open mold.output_path
+      image = MiniMagick::Image.new mold.output_path
 
       expect(image).to have_attributes(
         dimensions: [800, 480],
@@ -55,7 +55,7 @@ RSpec.describe Terminus::Aspects::Screens::Converters::Color do
 
     it "crops image" do
       converter.call mold.with(offset_x: 10, offset_y: 10)
-      image = MiniMagick::Image.open mold.output_path
+      image = MiniMagick::Image.new mold.output_path
 
       expect(image).to have_attributes(
         dimensions: [790, 470],
@@ -67,6 +67,18 @@ RSpec.describe Terminus::Aspects::Screens::Converters::Color do
           "depth" => 1,
           "mimeType" => "image/png"
         )
+      )
+    end
+
+    it "converts WEBP image" do
+      converter.call mold.with(palette_name: "24bit", mime_type: "image/webp")
+      image = MiniMagick::Image.new mold.output_path
+
+      expect(image).to have_attributes(
+        dimensions: [800, 480],
+        exif: {},
+        type: "WEBP",
+        data: hash_including("colorspace" => "sRGB", "mimeType" => "image/webp")
       )
     end
 

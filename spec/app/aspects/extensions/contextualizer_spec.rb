@@ -40,7 +40,8 @@ RSpec.describe Terminus::Aspects::Extensions::Contextualizer, :db do
           "data" => {"label" => "Test"},
           "fields" => [{"keyname" => "one", "default" => 1}],
           "values" => {"one" => 1},
-          "css_classes" => "screen screen--test screen--1bit screen--landscape screen--lg"
+          "css_classes" => "screen screen--test screen--1bit screen--landscape screen--lg",
+          "device" => {"id" => device.id, "battery_percentage" => 70, "wifi_percentage" => 90}
         },
         "screen_variables" => "--screen-w: 1040px;\n--screen-h: 780px;",
         "sensors" => [
@@ -54,18 +55,11 @@ RSpec.describe Terminus::Aspects::Extensions::Contextualizer, :db do
             "source" => "device",
             "created_at" => Time.new(2025, 1, 1).utc
           }
-        ],
-        "device" => {
-          "device_id" => device.id,
-          "battery_charge" => device.battery_charge,
-          "battery_voltage" => device.battery_voltage,
-          "battery_percentage" => device.battery_percentage,
-          "charging" => device.charging
-        }
+        ]
       )
     end
 
-    it "answers attributes without fields, values, model, sensors, and device" do
+    it "answers attributes without fields, values, model, and sensors" do
       extension = Factory.structs[:extension, label: "Test"]
 
       expect(contextualizer.call(extension)).to eq(
@@ -74,11 +68,11 @@ RSpec.describe Terminus::Aspects::Extensions::Contextualizer, :db do
           "css_classes" => nil,
           "data" => {},
           "fields" => [],
-          "values" => {}
+          "values" => {},
+          "device" => {}
         },
         "screen_variables" => nil,
-        "sensors" => [],
-        "device" => nil
+        "sensors" => []
       )
     end
   end

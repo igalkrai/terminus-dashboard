@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "dry/core"
 require "hanami/view"
 require "initable"
 
@@ -9,6 +8,7 @@ module Terminus
     module Parts
       # The extension presenter.
       class Extension < Hanami::View::Part
+        include Deps[:settings, :routes]
         include Initable[json_formatter: Aspects::JSONFormatter]
 
         def alpine_tags
@@ -16,6 +16,8 @@ module Terminus
                      .join(",")
                      .then { "[#{it}]" }
         end
+
+        def api_patch_uri = "#{settings.api_uri}#{routes.path :api_extension, id:}"
 
         def formatted_data = json_formatter.call data
 

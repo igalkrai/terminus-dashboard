@@ -17,7 +17,7 @@ module Terminus
             parameters = request.params
 
             if parameters.valid?
-              device = repository.update(*parameters.to_h.values_at(:id, :device))
+              device = update parameters
               response.body = {data: serializer.new(device).to_h}.to_json
             else
               unprocessable_content parameters, response
@@ -26,16 +26,18 @@ module Terminus
 
           private
 
+          def update parameters
+            repository.find repository.update(*parameters.to_h.values_at(:id, :device)).id
+          end
+
           def unprocessable_content parameters, response
-            payload = petail[
+            response.with_details problem[
               type: "/problem_details#device_payload",
               status: :unprocessable_content,
-              detail: "Validation failed.",
+              detail: translate("api.shared.errors.validation"),
               instance: "/api/devices",
               extensions: {errors: parameters.errors.to_h}
             ]
-
-            response.with body: payload.to_json, format: :problem_details, status: payload.status
           end
         end
       end

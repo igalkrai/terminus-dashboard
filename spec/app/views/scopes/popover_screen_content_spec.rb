@@ -7,7 +7,7 @@ RSpec.describe Terminus::Views::Scopes::PopoverScreenContent do
 
   subject(:scope) { described_class.new locals:, rendering: Terminus::View.new.rendering }
 
-  let(:locals) { Terminus::Aspects::Screens::Placeholder[id: 1].popover_attributes }
+  let(:locals) { Terminus::Aspects::Screens::Faux[id: 1].popover_attributes }
 
   describe "#element_id" do
     it "answers ID" do
@@ -38,13 +38,9 @@ RSpec.describe Terminus::Views::Scopes::PopoverScreenContent do
                 class="bit-popover-content bit-popover-screen"
                 popover="auto">
           <figure>
-            <img src="#{assets["setup.svg"]}" alt="Placeholder" width="800" height="480" loading="lazy">
-            <figcaption>Placeholder</figcaption>
+            <img src="#{assets["setup.svg"]}" alt="Faux" width="800" height="480" loading="lazy">
+            <figcaption>Faux</figcaption>
           </figure>
-
-          <p class="brand">
-            <img src="#{assets["logos/with_label.svg"]}" alt="Logo with Label" width="150" height="75">
-          </p>
         </dialog>
       CONTENT
     end

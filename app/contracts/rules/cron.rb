@@ -1,14 +1,18 @@
 # auto_register: false
 # frozen_string_literal: true
 
+require "core"
+
 module Terminus
   module Contracts
     module Rules
       Cron = lambda do
-        attributes = values.fetch(:extension).slice :interval, :unit
+        attributes = values.fetch(path.root, Core::EMPTY_HASH).slice :interval, :unit
 
         case attributes
-          in {unit: "none"} \
+          in {} \
+             | {interval: Integer, **nil} \
+             | {unit: "none"} \
              | {unit: "minute", interval: 0..59} \
              | {unit: "hour", interval: 0..23} \
              | {unit: "day", interval: 1..31} \

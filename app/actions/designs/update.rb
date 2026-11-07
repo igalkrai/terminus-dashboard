@@ -10,7 +10,7 @@ module Terminus
       class Update < Action
         include Deps[
           :htmx_layout,
-          template_repository: "repositories.screen_template",
+          repository: "repositories.screen_template",
           screen_repository: "repositories.screen"
         ]
         include Initable[job: Jobs::Screens::Upsert]
@@ -21,9 +21,10 @@ module Terminus
           required(:id).filled :integer
           required(:screen_id).filled :integer
 
-          required(:template).hash do
+          required(:design).hash do
             required(:label).filled :string
             required(:name).filled :string
+            required(:mode).filled :string
             required(:content).filled :string
           end
         end
@@ -41,12 +42,12 @@ module Terminus
         private
 
         def save request, parameters, response
-          attributes = parameters[:template]
-          template = template_repository.update parameters[:id], **attributes
+          attributes = parameters[:design]
+          screen_template = repository.update parameters[:id], **attributes
           screen = screen_repository.find parameters[:screen_id]
 
-          job.perform_async screen.model_id, template.screen_attributes.stringify_keys!
-          response.render view, template: template, layout: htmx_layout.call(request)
+          job.perform_async screen.model_id, screen_template.screen_attributes.stringify_keys!
+          response.render view, template: screen_template, layout: htmx_layout.call(request)
         end
 
         def error request, parameters, response
@@ -54,12 +55,12 @@ module Terminus
 
           response.render view,
                           template: template,
-                          fields: parameters[:template],
-                          errors: parameters.errors[:template],
+                          fields: parameters[:design],
+                          errors: parameters.errors[:design],
                           layout: htmx_layout.call(request)
         end
 
-        def find_template(parameters) = template_repository.find parameters[:id]
+        def find_template(parameters) = repository.find parameters[:id]
       end
     end
   end

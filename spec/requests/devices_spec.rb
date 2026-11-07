@@ -19,10 +19,12 @@ RSpec.describe "/api/devices", :db do
       refresh_rate: 100,
       image_cached: "on",
       image_timeout: 5,
+      panel_revision: "abcdef12",
       display_compatibility: "on",
       display_profile: "default",
       firmware_profile: "on",
       firmware_update: "on",
+      firmware_reset: "on",
       firmware_version: "1.2.3",
       charging: "on",
       battery_charge: 85.0,
@@ -31,7 +33,8 @@ RSpec.describe "/api/devices", :db do
       wifi_signal: -75,
       width: 800,
       height: 480,
-      touch_bar: "tap",
+      command: "identify",
+      touch_bar: "swipe",
       wake_duration: 123,
       wake_reason: "Awoken from test.",
       sleep_start_at: "18:00:00+0000",
@@ -64,14 +67,15 @@ RSpec.describe "/api/devices", :db do
           display_profile: "default",
           firmware_profile: false,
           firmware_update: true,
+          firmware_reset: false,
           firmware_version: "1.2.3",
           charging: false,
           battery_charge: 0.0,
-          battery_voltage: 3.0,
+          battery_voltage: 3.84,
           wifi_band: 0.0,
           wifi_signal: -44,
-          width: 0,
-          height: 0,
+          width: 800,
+          height: 480,
           touch_bar: "tap",
           wake_duration: 0,
           wake_reason: nil,
@@ -113,18 +117,21 @@ RSpec.describe "/api/devices", :db do
         image_timeout: 0,
         firmware_profile: false,
         firmware_update: true,
+        firmware_reset: false,
         firmware_version: "1.2.3",
         battery_charge: 0,
-        battery_voltage: 3.0,
+        battery_voltage: 3.84,
         charging: false,
         wifi_band: 0.0,
         wifi_signal: -44,
-        width: 0,
-        height: 0,
+        width: 800,
+        height: 480,
+        panel_revision: nil,
         display_compatibility: false,
         display_profile: "default",
         wake_duration: 0,
         wake_reason: nil,
+        command: "screen_forward",
         touch_bar: "tap",
         sleep_start_at: nil,
         sleep_stop_at: nil,
@@ -141,7 +148,7 @@ RSpec.describe "/api/devices", :db do
         "HTTP_AUTHORIZATION" => access_token,
         "CONTENT_TYPE" => "application/json"
 
-    expect(json_payload).to eq(Petail[status: :not_found].to_h)
+    expect(json_payload).to eq(RFC::API::Problem[status: :not_found].to_h)
   end
 
   it "creates device with valid attributes" do
@@ -165,6 +172,7 @@ RSpec.describe "/api/devices", :db do
         display_profile: "default",
         firmware_profile: true,
         firmware_update: true,
+        firmware_reset: true,
         firmware_version: "1.2.3",
         charging: true,
         battery_charge: 85.0,
@@ -173,7 +181,8 @@ RSpec.describe "/api/devices", :db do
         wifi_signal: -75,
         width: 800,
         height: 480,
-        touch_bar: "tap",
+        command: "identify",
+        touch_bar: "swipe",
         wake_duration: 123,
         wake_reason: "Awoken from test.",
         sleep_start_at: "18:00:00",
@@ -220,8 +229,8 @@ RSpec.describe "/api/devices", :db do
         battery_voltage: 0,
         wifi_band: 0,
         wifi_signal: 0,
-        width: 0,
-        height: 0,
+        width: 800,
+        height: 480,
         touch_bar: "tap",
         wake_duration: 0,
         wake_reason: nil,
@@ -242,7 +251,7 @@ RSpec.describe "/api/devices", :db do
          "HTTP_AUTHORIZATION" => access_token,
          "CONTENT_TYPE" => "application/json"
 
-    problem = Petail[
+    problem = RFC::API::Problem[
       type: "/problem_details#device_payload",
       status: :unprocessable_content,
       detail: "Validation failed.",
@@ -256,7 +265,7 @@ RSpec.describe "/api/devices", :db do
       }
     ]
 
-    expect(json_payload).to match(problem.to_h)
+    expect(json_payload).to eq(problem.to_h)
   end
 
   it "answers problem details for invalid model" do
@@ -267,14 +276,14 @@ RSpec.describe "/api/devices", :db do
          "HTTP_AUTHORIZATION" => access_token,
          "CONTENT_TYPE" => "application/json"
 
-    problem = Petail[
+    problem = RFC::API::Problem[
       type: "/problem_details#device_payload",
       status: :not_found,
       detail: %(Key (model_id)=(666) is not present in table "model".),
       instance: "/api/devices"
     ]
 
-    expect(json_payload).to match(problem.to_h)
+    expect(json_payload).to eq(problem.to_h)
   end
 
   it "patches device when valid" do
@@ -292,7 +301,7 @@ RSpec.describe "/api/devices", :db do
           "HTTP_AUTHORIZATION" => access_token,
           "CONTENT_TYPE" => "application/json"
 
-    problem = Petail[
+    problem = RFC::API::Problem[
       type: "/problem_details#device_payload",
       status: :unprocessable_content,
       detail: "Validation failed.",
@@ -304,7 +313,7 @@ RSpec.describe "/api/devices", :db do
       }
     ]
 
-    expect(json_payload).to match(problem.to_h)
+    expect(json_payload).to eq(problem.to_h)
   end
 
   it "answers error when patch fails" do
@@ -313,7 +322,7 @@ RSpec.describe "/api/devices", :db do
           "HTTP_AUTHORIZATION" => access_token,
           "CONTENT_TYPE" => "application/json"
 
-    problem = Petail[
+    problem = RFC::API::Problem[
       type: "/problem_details#device_payload",
       status: :unprocessable_content,
       detail: "Validation failed.",
@@ -328,7 +337,7 @@ RSpec.describe "/api/devices", :db do
       }
     ]
 
-    expect(json_payload).to match(problem.to_h)
+    expect(json_payload).to eq(problem.to_h)
   end
 
   it "deletes existing record" do
@@ -348,18 +357,21 @@ RSpec.describe "/api/devices", :db do
         refresh_rate: 900,
         image_cached: false,
         image_timeout: 0,
+        panel_revision: nil,
         display_compatibility: false,
         display_profile: "default",
         firmware_profile: false,
         firmware_update: true,
+        firmware_reset: false,
         firmware_version: "1.2.3",
         charging: false,
         battery_charge: 0,
-        battery_voltage: 3.0,
+        battery_voltage: 3.84,
         wifi_band: 0.0,
         wifi_signal: -44,
-        width: 0,
-        height: 0,
+        width: 800,
+        height: 480,
+        command: "screen_forward",
         touch_bar: "tap",
         wake_duration: 0,
         wake_reason: nil,
@@ -378,6 +390,6 @@ RSpec.describe "/api/devices", :db do
            "HTTP_AUTHORIZATION" => access_token,
            "CONTENT_TYPE" => "application/json"
 
-    expect(json_payload).to match(data: {})
+    expect(json_payload).to match(RFC::API::Problem[status: :not_found].to_h)
   end
 end

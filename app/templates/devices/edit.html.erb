@@ -19,14 +19,20 @@
     <div class="bit-card device">
       <h1 class="label">Edit Device</h1>
 
-      <%= render "shared/popovers/triggers/screen", name: "screen-#{current_screen.id}" do %>
+      <%= scope(
+            :popover_trigger_button,
+            target: "screen-#{current_screen.id}"
+          ).render("shared/popovers/triggers/screen") do %>
         <%= render "shared/screen", uri: current_screen.image_uri %>
       <% end %>
 
       <%= scope(:popover_screen_content, **current_screen.popover_attributes).render %>
       <%= render "measurements", device: %>
 
-      <%= form_for :device, routes.path(:devices), method: :put, class: "bit-form" do |form| %>
+      <%= form_for :device,
+                   routes.path(:device, id: device.id),
+                   method: :put,
+                   class: "bit-form" do |form| %>
         <%= render "devices/shared/fields",
                    form:,
                    models:,
@@ -54,4 +60,6 @@
       <% end %>
     </div>
   </div>
+
+  <%= scope(:tooltip_action_content, label: "Info").render %>
 </section>

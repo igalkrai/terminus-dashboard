@@ -14,6 +14,7 @@ module Terminus
         api_key
         firmware_profile
         firmware_update
+        firmware_reset
         firmware_version
         wifi_band
         wifi_signal
@@ -25,10 +26,10 @@ module Terminus
         image_timeout
         wake_reason
         wake_duration
-        width
-        height
         display_compatibility
+        panel_revision
         display_profile
+        command
         touch_bar
         sleep_start_at
         sleep_stop_at
@@ -45,6 +46,7 @@ module Terminus
 
       def to_h
         attributes = record.to_h.slice(*keys)
+        attributes.merge! record.model.to_h.slice(:width, :height)
         attributes.transform_values!(&transformer)
         attributes
       end

@@ -42,8 +42,8 @@
     <dt class="key">Sleep Duration</dt>
     <dd class="value"><%= log.sleep_duration %></dd>
 
-    <dt class="key">Special Function</dt>
-    <dd class="value"><%= log.special_function %></dd>
+    <dt class="key">Command</dt>
+    <dd class="value"><%= log.command %></dd>
 
     <dt class="key">Wake Reason</dt>
     <dd class="value"><%= log.wake_reason %></dd>
@@ -64,7 +64,7 @@
     <dd class="value"><%= log.retry %></dd>
 
     <dt class="key">Source</dt>
-    <dd class="value"><%= log.source_path %>:<%= log.source_line %></dd>
+    <dd class="value"><%= log.source_link %></dd>
 
     <dt class="key">Created</dt>
     <dd class="value"><%= human_at log.created_at %></dd>

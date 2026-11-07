@@ -22,5 +22,12 @@
     border-radius: 0rem 0.5rem 0.5rem 0;
     font-weight: 350;
   }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    gap: 0.2rem 0;
+  }
 }
 

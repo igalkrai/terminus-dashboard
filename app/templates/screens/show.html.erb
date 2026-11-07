@@ -12,7 +12,10 @@
     <div class="bit-card screen">
       <h2 class="label"><%= screen.label %></h2>
 
-      <%= render "shared/popovers/triggers/screen", name: "screen-#{screen.id}" do %>
+      <%= scope(
+            :popover_trigger_button,
+            target: "screen-#{screen.id}"
+          ).render("shared/popovers/triggers/screen") do %>
         <%= render "shared/screen", uri: screen.image_uri %>
       <% end %>
 
@@ -29,16 +32,32 @@
       <dl class="bit-definition-list">
         <dt class="key">
           Name
-          <%= render "shared/popovers/triggers/default", name: :name %>
+          <%= scope(:popover_trigger_button, tip: :info, target: :name).render %>
         </dt>
         <dd class="value"><%= screen.name %></dd>
 
         <dt class="key">
           Model
-          <%= render "shared/popovers/triggers/default", name: :model %>
+          <%= scope(:popover_trigger_button, tip: :info, target: :model).render %>
         </dt>
         <dd class="value">
           <%= link_to screen.model.label, routes.path(:model, id: screen.model_id) %>
+        </dd>
+
+        <dt class="key">
+          Extension
+          <%= scope(:popover_trigger_button, tip: :info, target: :extension).render %>
+        </dt>
+        <dd class="value">
+          <%= screen.extension_link %>
+        </dd>
+
+        <dt class="key">
+          Design
+          <%= scope(:popover_trigger_button, tip: :info, target: :design).render %>
+        </dt>
+        <dd class="value">
+          <%= screen.design_link %>
         </dd>
 
         <dt class="key">MIME Type</dt>
@@ -61,6 +80,8 @@
       </dl>
     </div>
   </div>
+
+  <%= scope(:tooltip_action_content, label: "Info").render %>
+  <%= render "screens/shared/popovers/all" %>
 </section>
 
-<%= render "screens/shared/popovers/all" %>

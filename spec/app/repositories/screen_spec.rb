@@ -37,6 +37,8 @@ RSpec.describe Terminus::Repositories::Screen, :db do
         model_id: model.id,
         name: "test",
         label: "Test",
+        template: nil,
+        extension: nil,
         image_attributes: hash_including(
           metadata: hash_including(
             size: kind_of(Integer),
@@ -66,8 +68,10 @@ RSpec.describe Terminus::Repositories::Screen, :db do
     end
 
     it "deletes associated image" do
-      instance = screen.upload SPEC_ROOT.join("support/fixtures/test.png").open
-      repository.update screen.id, image_data: instance.image_attributes
+      SPEC_ROOT.join("support/fixtures/test.png").open do |io|
+        repository.update screen.id, image_data: screen.upload(io).image_attributes
+      end
+
       repository.delete screen.id
 
       expect(Hanami.app[:shrine].storages[:store].store).to eq({})
@@ -81,7 +85,7 @@ RSpec.describe Terminus::Repositories::Screen, :db do
 
   describe "#find" do
     it "answers record by ID" do
-      expect(repository.find(screen.id)).to eq(screen)
+      expect(repository.find(screen.id).id).to eq(screen.id)
     end
 
     it "answers nil for unknown ID" do
@@ -95,11 +99,11 @@ RSpec.describe Terminus::Repositories::Screen, :db do
 
   describe "#find_by" do
     it "answers record when found" do
-      expect(repository.find_by(name: screen.name)).to eq(screen)
+      expect(repository.find_by(name: screen.name).id).to eq(screen.id)
     end
 
     it "answers record when found by multiple attributes" do
-      expect(repository.find_by(name: screen.name, label: screen.label)).to eq(screen)
+      expect(repository.find_by(name: screen.name, label: screen.label).id).to eq(screen.id)
     end
 
     it "answers nil when not found" do
@@ -135,6 +139,8 @@ RSpec.describe Terminus::Repositories::Screen, :db do
         model_id: model.id,
         name: "test",
         label: "Test",
+        template: nil,
+        extension: nil,
         image_attributes: hash_including(
           metadata: hash_including(
             size: kind_of(Integer),
@@ -172,11 +178,13 @@ RSpec.describe Terminus::Repositories::Screen, :db do
 
   describe "#where" do
     it "answers record for single attribute" do
-      expect(repository.where(label: screen.label)).to contain_exactly(screen)
+      ids = repository.where(label: screen.label).map(&:id)
+      expect(ids).to contain_exactly(screen.id)
     end
 
     it "answers record for multiple attributes" do
-      expect(repository.where(label: screen.label, name: screen.name)).to contain_exactly(screen)
+      ids = repository.where(label: screen.label, name: screen.name).map(&:id)
+      expect(ids).to contain_exactly(screen.id)
     end
 
     it "answers empty array for unknown value" do

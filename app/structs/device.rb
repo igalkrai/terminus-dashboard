@@ -32,14 +32,12 @@ module Terminus
           refresh_rate:,
           temperature_profile: display_profile,
           touchbar_mode: touch_bar,
-          update_firmware: firmware_update
+          firmware_version:,
+          reset_firmware: firmware_reset
         }
       end
 
-      def liquid_attributes
-        {device_id: id, battery_charge:, battery_voltage:, battery_percentage:, charging:}
-          .stringify_keys!
-      end
+      def liquid_attributes = {id:, battery_percentage:, wifi_percentage:}.stringify_keys!
 
       def slug
         return Core::EMPTY_STRING unless mac_address
@@ -47,7 +45,7 @@ module Terminus
         mac_address.tr ":", Core::EMPTY_STRING
       end
 
-      def screen_label(prefix) = "#{prefix} #{id}"
+      def screen_label(suffix) = "#{label} (#{suffix})"
 
       def screen_name(kind) = "#{kind}_#{id}"
 
@@ -61,21 +59,34 @@ module Terminus
         }
       end
 
+      def wifi_percentage
+        case wifi_signal
+          when 0 then 0
+          when ..-91 then 10
+          when -90..-81 then 20
+          when -80..-71 then 30
+          when -70..-67 then 40
+          when -66..-62 then 50
+          when -61..-57 then 60
+          when -56..-52 then 70
+          when -51..-47 then 80
+          when -46..-40 then 90
+          else 100
+        end
+      end
+
       private
 
       def battery_voltage_to_percent
-        case battery_voltage
-          when 0 then 0
-          when ..0.45 then 10
-          when ..0.9 then 20
-          when ..1.35 then 30
-          when ..1.8 then 40
-          when ..2.25 then 50
-          when ..2.7 then 60
-          when ..3.15 then 70
-          when ..3.6 then 80
-          when ..4.05 then 90
-          else 100
+        raw = ((battery_voltage - 3) / 0.012).round 2
+
+        case raw
+          when 88.. then 100
+          when 85.. then 95
+          when 83.. then 90
+          when 10.. then raw.round 2
+          when ..0 then 0
+          else 1
         end
       end
     end

@@ -8,12 +8,15 @@ require_relative "feature"
 
 module Authentication
   # Specialized Roda middleware for authentication.
-  # :nocov:
+  # simplecov:disable
   class Middleware < Roda
     UNVERIFIED_ID = 1
     VERIFIED_ID = 2
 
     plugin :middleware
+
+    # TODO: Remove after upgrading to Roda 4.0.0.
+    plugin :json_parser, content_type_regexp: %r(\Aapplication/(?:vnd\.api\+)?json\b)i
 
     plugin :rodauth, json: true do
       enable :active_sessions,
@@ -140,6 +143,9 @@ module Authentication
         session_inactivity_timeout Hanami.app[:settings].session_inactivity_limit
         max_session_lifetime Hanami.app[:settings].session_lifetime_limit
       else
+        session_inactivity_deadline nil
+        session_lifetime_deadline nil
+
         Hanami.app[:logger].warn { "Rodauth session expiration is disabled." }
       end
     end
@@ -150,5 +156,5 @@ module Authentication
       request.rodauth
     end
   end
-  # :nocov:
+  # simplecov:enable
 end

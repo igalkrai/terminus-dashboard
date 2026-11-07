@@ -14,9 +14,10 @@ RSpec.describe Terminus::Actions::Designs::Update, :db do
       {
         id: template.id,
         screen_id: screen.id,
-        template: {
+        design: {
           label: "Test Update",
           name: "test_update",
+          mode: "text",
           content: "<h1>Update</h1>"
         }
       }
@@ -32,8 +33,9 @@ RSpec.describe Terminus::Actions::Designs::Update, :db do
               model.id,
               {
                 "template_id" => template.id,
-                "name" => "test_update",
                 "label" => "Test Update",
+                "name" => "test_update",
+                "mode" => "text",
                 "content" => "<h1>Update</h1>"
               }
             ]
@@ -48,7 +50,7 @@ RSpec.describe Terminus::Actions::Designs::Update, :db do
     end
 
     it "answers error when attribute is missing" do
-      parameters[:template].delete :label
+      parameters[:design].delete :label
       response = Rack::MockRequest.new(action).put "", params: parameters
 
       expect(response.body).to include("is missing")

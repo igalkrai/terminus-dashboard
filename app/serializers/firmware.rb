@@ -1,30 +1,49 @@
 # auto_register: false
 # frozen_string_literal: true
 
+require "initable"
+
 module Terminus
   module Serializers
     # A model serializer for specific keys.
     class Firmware
-      KEYS = %i[id version kind created_at updated_at].freeze
+      KEYS = %i[id version created_at updated_at].freeze
 
-      def initialize record, keys: KEYS, transformer: Transformers::Time
+      include Deps[model_repository: "repositories.firmware_model"]
+      include Initable[keys: KEYS, transformer: proc { Terminus::Serializers::Transformers::Time }]
+
+      def initialize(record, **)
         @record = record
-        @keys = keys
-        @transformer = transformer
+        super(**)
       end
 
       def to_h
-        attributes = record.to_h.slice(*keys).merge(file_name: "#{record.version}.bin")
+        attributes = record.to_h.slice(*keys).merge!(file_name: "#{record.version}.bin")
+
         attributes.transform_values!(&transformer)
-        attributes.merge! metadata, uri: record.attachment_uri if record.attachment_id
+        add_metadata attributes, record
+        add_model_ids attributes, record
+
         attributes
       end
 
       private
 
-      attr_reader :record, :keys, :transformer
+      attr_reader :record
 
-      def metadata = record.attachment_attributes[:metadata].slice :mime_type, :size
+      # :reek:UtilityFunction
+      def add_metadata attributes, record
+        return unless record.attachment_id
+
+        attributes.merge!(
+          **record.attachment_attributes[:metadata].slice(:mime_type, :size),
+          uri: record.attachment_uri
+        )
+      end
+
+      def add_model_ids attributes, record
+        attributes[:model_ids] = model_repository.where(firmware_id: record.id).map(&:model_id)
+      end
     end
   end
 end

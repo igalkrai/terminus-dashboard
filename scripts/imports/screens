@@ -1,0 +1,13 @@
+#! /usr/bin/env ruby
+# frozen_string_literal: true
+
+require "bundler/setup"
+Bundler.require :tools
+
+require "hanami/prepare"
+
+if ARGV.empty?
+  puts "ERROR: Path to images must be supplied."
+else
+  Terminus::Aspects::Screens::Importer.new.call ARGV.first
+end

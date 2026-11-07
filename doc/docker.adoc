@@ -3,6 +3,7 @@
 :figure-caption!:
 
 :caddy_link: link:https://caddyserver.com[Caddy]
+:doc_configuration_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/configuration.adoc[Configuration]
 :docker_compose_link: link:https://docs.docker.com/compose[Docker Compose]
 :docker_link: link:https://www.docker.com[Docker]
 :precompiled_images_link: link:https://ghcr.io/usetrmnl/terminus[Precompiled Images]
@@ -49,7 +50,7 @@ Watch for any changes in the output. Otherwise, if no changes are detected, you 
 
 == Configuration
 
-You'll want to customize the environment variables in your `.env` file so your device can connect. This is automatically setup for you but, depending on your specific needs, you'll want to customize further. Specifically, to ensure the `API_URI` and `HANAMI_PORT` environment variables are set for your host. See link:/#configuration[Configuration] for details.
+You'll want to customize the environment variables in your `.env` file so your device can connect. This is automatically setup for you but, depending on your specific needs, you'll want to customize further. Specifically, to ensure the `API_URI` and `HANAMI_PORT` environment variables are set for your host. See {doc_configuration_link} for details.
 
 💡 When making environment variable changes (or the `.env` file in general), ensure you restart Docker (or Docker Compose) to apply the changes.
 

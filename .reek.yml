@@ -10,68 +10,56 @@ detectors:
     exclude:
       - Terminus::Aspects::PasswordEncryptor#call
       - Terminus::Aspects::Playlists::SlideWindow#screens
+      - Terminus::Aspects::Screens::Positioner#process
   DataClump:
     exclude:
       - Terminus::Actions::API::Base
+      - Terminus::Actions::Extensions::Update
       - Terminus::Aspects::Croner
       - Terminus::Aspects::Errors::Problem
-      - Terminus::Aspects::Screens::Shoter
       - Terminus::Repositories::Screen
   DuplicateMethodCall:
     exclude:
-      - Terminus::Aspects::Devices::Provisioner#create
-      - UniversalLoggerPatch#_log_structured
+      - Terminus::Aspects::Devices::Creator#create
+      - Terminus::Aspects::Extensions::Exchanges::RequestBuilder#render
+      - Terminus::Views::Helpers#default_option
   FeatureEnvy:
     exclude:
+      - Hanami::Action::Response#with_details
       - Terminus::Action#authorize
       - Terminus::Actions::API::Base#detail_duplicate
       - Terminus::Actions::API::Base#detail_enum
       - Terminus::Actions::API::Base#detail_foreign_key
-      - Terminus::Actions::API::Devices::Create#unprocessable_content
-      - Terminus::Actions::API::Devices::Patch#unprocessable_content
-      - Terminus::Actions::API::Firmware::Create#unprocessable_content
-      - Terminus::Actions::API::Firmware::Create#unprocessable_download
-      - Terminus::Actions::API::Firmware::Delete#failure
-      - Terminus::Actions::API::Firmware::Patch#unprocessable_content
-      - Terminus::Actions::API::Firmware::Patch#unprocessable_download
-      - Terminus::Actions::API::Models::Create#unprocessable_content
-      - Terminus::Actions::API::Models::Patch#unprocessable_content
-      - Terminus::Actions::API::Playlists::Create#unprocessable_content
-      - Terminus::Actions::API::Playlists::Patch#unprocessable_content
+      - Terminus::Actions::API::Base#detail_out_of_range
+      - Terminus::Actions::API::Extensions::Exchanges::Create#failure
+      - Terminus::Actions::API::Extensions::Exchanges::Patch#unprocessable_content
       - Terminus::Actions::API::Screens::Create#handle
       - Terminus::Actions::API::Screens::Create#save
-      - Terminus::Actions::API::Screens::Create#unprocessable_content_for_creation
-      - Terminus::Actions::API::Screens::Create#unprocessable_content_for_parameters
-      - Terminus::Actions::API::Screens::Delete#failure
       - Terminus::Actions::API::Screens::Patch#replace
-      - Terminus::Actions::API::Screens::Patch#unprocessable_content_for_creation
-      - Terminus::Actions::API::Screens::Patch#unprocessable_content_for_parameters
-      - Terminus::Actions::Devices::Create#provision
-      - Terminus::Actions::Devices::Create#render_new
+      - Terminus::Actions::Devices::Create#process
       - Terminus::Actions::Devices::Update#edit
-      - Terminus::Actions::Extensions::Clone::Create#error
-      - Terminus::Actions::Extensions::Create#error
+      - Terminus::Actions::Extensions::Create#failure
       - Terminus::Actions::Extensions::Gallery::Create#render_error
       - Terminus::Actions::Extensions::Gallery::Create#render_schema_error
       - Terminus::Actions::Extensions::Gallery::Index#render_error
-      - Terminus::Actions::Extensions::Update#error
+      - Terminus::Actions::Extensions::Update#success
       - Terminus::Actions::Firmware::Create#error
-      - Terminus::Actions::Firmware::Delete#render
       - Terminus::Actions::Firmware::Update#error
       - Terminus::Actions::Models::Update#error
       - Terminus::Actions::Playlists::Create#error
-      - Terminus::Actions::Playlists::Items::Edit#screen_options
-      - Terminus::Actions::Playlists::Items::New#screen_options
       - Terminus::Actions::Playlists::Screens::Show#view_settings
       - Terminus::Actions::Playlists::Update#error
       - Terminus::Actions::Users::Update#error
+      - Terminus::Aspects::Devices::Creator#maybe_redact_api_key
+      - Terminus::Aspects::Errors::Detailer#build_message
       - Terminus::Aspects::Errors::Problem#enum
       - Terminus::Aspects::Extensions::Cloner#build_attributes
       - Terminus::Aspects::Extensions::Exchanges::Refresher#fetch
-      - Terminus::Aspects::Extensions::Fetchers::Client#maybe_alter_mime_type
+      - Terminus::Aspects::Extensions::Fetcher::Client#maybe_alter_mime_type
       - Terminus::Aspects::Extensions::Importers::Remote::Extractor#build
       - Terminus::Aspects::Extensions::Importers::Remote::Transformers::Kind#process
       - Terminus::Aspects::Extensions::Renderers::Image#render_multiple
+      - Terminus::Aspects::Firmware::Synchronizer#attach
       - Terminus::Aspects::Playlists::ScreenOptioner#call
       - Terminus::Aspects::Screens::Compressor#convert
       - Terminus::Aspects::Screens::Converters::Color#convert
@@ -84,45 +72,68 @@ detectors:
       - Terminus::Aspects::Screens::Creator#find
       - Terminus::Aspects::Screens::Creators::TempPath#capture_input
       - Terminus::Aspects::Screens::Designer::EventStream#render_preview
-      - Terminus::Aspects::Screens::Shoter#save
+      - Terminus::Aspects::Screens::Shoter#render
       - Terminus::Aspects::Screens::TempPather#capture_input
       - Terminus::Aspects::Screens::Upserters::TempPath#capture_input
       - Terminus::IPFinder#all
       - Terminus::Jobs::Batches::Extension#enqueue_devices
       - Terminus::Jobs::Batches::Extension#enqueue_models
+      - Terminus::Providers::RackAttack#throttle_api_setup
+      - Terminus::Providers::RackAttack#throttle_login
+      - Terminus::Repositories::Firmware#replace_attachment
       - Terminus::Repositories::Screen#create_with_image
       - Terminus::Repositories::Screen#update_with_image
   LongParameterList:
     enabled: false
+  NestedIterators:
+    exclude:
+      - Terminus::Providers::RackAttack#allow_subnets
   RepeatedConditional:
     exclude:
       - Authentication::Middleware
+  TooManyConstants:
+    exclude:
+      - Terminus::Types
   TooManyInstanceVariables:
     exclude:
-      - Terminus::Aspects::Screens::Placeholder
+      - Terminus::Aspects::Screens::Faux
   TooManyStatements:
     exclude:
       - Terminus::Action#handle_rodauth_redirect
       - Terminus::Actions::Extensions::Poll::Show#fetch
       - Terminus::Aspects::Croner#call
-      - Terminus::Aspects::Extensions::Fetchers::Client#parse
-      - Terminus::Aspects::Extensions::Fetchers::Client#process
+      - Terminus::Aspects::Downloader#check
+      - Terminus::Aspects::Extensions::Exchanges::RequestBuilder#render
+      - Terminus::Aspects::Extensions::Fetcher::Client#parse
+      - Terminus::Aspects::Extensions::Generator#process
       - Terminus::Aspects::Extensions::Importers::Remote::Transformer#process
       - Terminus::Aspects::Extensions::Parser#from_json
       - Terminus::Aspects::Firmware::Downloader#get
       - Terminus::Aspects::Screens::Compressor#call
       - Terminus::Aspects::Screens::Converters::Color#convert
       - Terminus::Aspects::Screens::Converters::Monochrome#convert
-      - Terminus::Aspects::Screens::Placeholder#initialize
-      - Terminus::Aspects::Screens::Shoter#save
+      - Terminus::Aspects::Screens::Faux#initialize
+      - Terminus::Aspects::Screens::Interrupter#interrupt
+      - Terminus::Chromium#call
+      - Terminus::Chromium#initialize
       - Terminus::Providers::Sidekiq#load_schedule
       - Terminus::Structs::Device#battery_voltage_to_percent
-      - Terminus::Views::Parts::Device#wifi_percentage
+      - Terminus::Structs::Device#wifi_percentage
       - Terminus::Views::Parts::DeviceLog#level_class
       - UniversalLoggerPatch#_log_structured
+  UncommunicativeMethodName:
+    exclude:
+      - Terminus::Refines::Icalendar#self.map_3339
+      - Terminus::Refines::Icalendar#self.rfc_3339
+  UnusedParameters:
+    enabled: false
   UtilityFunction:
     exclude:
+      - Terminus::Refines::Icalender
+      - "::Icalendar::Event#coordinates"
       - Terminus::Aspects::Croner
       - Terminus::Aspects::Errors::Problem#duplicate
       - Terminus::Aspects::Errors::Problem#foreign_key
+      - Terminus::Aspects::Errors::Problem#out_of_range
       - Terminus::Aspects::Liquid::Filters#json
+

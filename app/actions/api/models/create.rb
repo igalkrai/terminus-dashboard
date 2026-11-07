@@ -44,15 +44,13 @@ module Terminus
           private
 
           def unprocessable_content parameters, response
-            payload = petail[
+            response.with_details problem[
               type: "/problem_details#model_payload",
               status: :unprocessable_content,
-              detail: "Validation failed.",
+              detail: translate("api.shared.errors.validation"),
               instance: "/api/models",
               extensions: {errors: parameters.errors.to_h}
             ]
-
-            response.with body: payload.to_json, format: :problem_details, status: payload.status
           end
         end
       end

@@ -5,9 +5,9 @@ require "hanami_helper"
 RSpec.describe Terminus::Views::Parts::Extension do
   subject(:part) { described_class.new value: extension, rendering: Terminus::View.new.rendering }
 
-  let :extension do
-    Factory.structs[:extension, kind: "poll", unit: "none"]
-  end
+  let(:extension) { Factory.structs[:extension, kind: "poll", unit: "none"] }
+
+  include_context "with application dependencies"
 
   describe "#alpine_tags" do
     it "answers filled array string" do
@@ -22,6 +22,12 @@ RSpec.describe Terminus::Views::Parts::Extension do
 
     it "answers empty array string when nil" do
       expect(part.alpine_tags).to eq("[]")
+    end
+  end
+
+  describe "#api_patch_uri" do
+    it "answers URI" do
+      expect(part.api_patch_uri).to eq("https://localhost/api/extensions/#{extension.id}")
     end
   end
 

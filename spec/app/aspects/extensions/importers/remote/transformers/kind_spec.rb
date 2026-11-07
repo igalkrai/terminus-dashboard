@@ -28,19 +28,11 @@ RSpec.describe Terminus::Aspects::Extensions::Importers::Remote::Transformers::K
       )
     end
 
-    it "answers failure when webhook" do
-      attributes = {strategy: "webhook"}
-
-      expect(transformer.call(attributes)).to be_failure(
-        "Unsupported kind: webhook. Use: polling or static."
-      )
-    end
-
     it "answers failure when strategy is none and OAuth is enabled" do
       attributes = {strategy: "none", oauth_enabled: true}
 
       expect(transformer.call(attributes)).to be_failure(
-        "Unsupported kind: oauth. Use: polling or static."
+        "Unsupported kind: oauth. Use: polling, static, or webhook."
       )
     end
 
@@ -48,7 +40,7 @@ RSpec.describe Terminus::Aspects::Extensions::Importers::Remote::Transformers::K
       attributes = {strategy: "bogus"}
 
       expect(transformer.call(attributes)).to be_failure(
-        "Unsupported kind: bogus. Use: polling or static."
+        "Unsupported kind: bogus. Use: polling, static, or webhook."
       )
     end
   end

@@ -59,7 +59,7 @@ RSpec.describe "/api/log", :db do
         sleep_duration: 50,
         source_line: 5,
         source_path: "src/bl.cpp",
-        special_function: "none",
+        command: "none",
         wake_reason: "timer",
         wifi_signal: -54,
         wifi_status: "connected"
@@ -73,12 +73,12 @@ RSpec.describe "/api/log", :db do
 
   context "with invalid ID header" do
     before do
-      headers.delete "HTTP_ID"
+      headers.delete "HTTP_ACCESS_TOKEN"
       post routes.path(:api_log), payload.to_json, **headers
     end
 
     it "answers problem details" do
-      problem = Petail[
+      problem = RFC::API::Problem[
         type: "/problem_details#device_id",
         status: 404,
         title: "Not Found",
@@ -105,10 +105,10 @@ RSpec.describe "/api/log", :db do
     end
 
     it "answers problem details" do
-      problem = Petail[
+      problem = RFC::API::Problem[
         type: "/problem_details#log_payload",
         status: :unprocessable_content,
-        detail: "Validation failed due to incorrect or invalid payload.",
+        detail: "Validation failed due to invalid payload.",
         instance: "/api/log",
         extensions: {errors: {logs: ["must be filled"]}}
       ]

@@ -8,8 +8,8 @@ RSpec.describe Terminus::Aspects::Firmware::Synchronizer, :db do
 
   let :trmnl_api do
     instance_double TRMNL::API::Client,
-                    latest_firmware: Success(
-                      TRMNL::API::Models::LatestFirmware[
+                    firmware_latest: Success(
+                      TRMNL::API::Models::Firmware::Latest[
                         url: "https://trmnl-fw.s3.us-east-2.amazonaws.com/FW1.2.3.bin",
                         version: "1.2.3"
                       ]
@@ -31,49 +31,77 @@ RSpec.describe Terminus::Aspects::Firmware::Synchronizer, :db do
 
   describe "#call" do
     it "answers new record with attachment" do
-      response = synchronizer.call.success
+      Factory[:model, name: "og_png"]
 
-      expect(response).to have_attributes(
-        version: "1.2.3",
-        kind: "trmnl",
-        attachment_attributes: {
-          id: /\h{32}\.bin/,
-          metadata: {
-            filename: "1.2.3.bin",
-            height: nil,
-            mime_type: "application/octet-stream",
-            size: 4,
-            width: nil
-          },
-          storage: "store"
-        }
+      expect(synchronizer.call).to match(
+        Success(
+          array_including(
+            having_attributes(
+              version: "1.2.3",
+              attachment_attributes: {
+                id: match_shrine_id(extension: :bin),
+                metadata: {
+                  filename: "1.2.3.bin",
+                  height: nil,
+                  mime_type: "application/octet-stream",
+                  size: 4,
+                  width: nil
+                },
+                storage: "store"
+              }
+            )
+          )
+        )
       )
     end
 
     it "answers existing record" do
-      record = Factory[:firmware, version: "1.2.3"]
-      expect(synchronizer.call).to be_success(record)
+      firmware = Factory[:firmware, version: "1.2.3"]
+      model = Factory[:model, name: "og_png"]
+
+      Factory[:firmware_model, firmware_id: firmware.id, model_id: model.id]
+
+      expect(synchronizer.call).to match(
+        Success(
+          array_including(
+            having_attributes(
+              version: "1.2.3",
+              attachment_attributes: {}
+            )
+          )
+        )
+      )
     end
 
     context "with attachment errors" do
       subject(:synchronizer) { described_class.new trmnl_api:, downloader:, struct: }
 
       let :struct do
-        instance_double Terminus::Structs::Firmware, upload: nil, errors: ["Danger!"], valid?: false
+        class_double Terminus::Structs::Firmware,
+                     new: instance_double(
+                       Terminus::Structs::Firmware, upload: nil, errors: ["Danger!"], valid?: false
+                     )
       end
 
       it "answers failure" do
-        expect(synchronizer.call).to be_failure(["Danger!"])
+        Factory[:model, name: "og_png"]
+        expect(synchronizer.call).to be_failure(["Danger!", "Danger!", "Danger!"])
       end
     end
 
     context "with API client failure" do
       let :trmnl_api do
-        instance_double TRMNL::API::Client, latest_firmware: Failure(message: "Danger!")
+        instance_double TRMNL::API::Client, firmware_latest: Failure(message: "Danger!")
       end
 
       it "answers failure" do
-        expect(synchronizer.call).to be_failure(message: "Danger!")
+        expect(synchronizer.call).to be_failure(
+          [
+            {message: "Danger!"},
+            {message: "Danger!"},
+            {message: "Danger!"}
+          ]
+        )
       end
     end
 
@@ -83,7 +111,13 @@ RSpec.describe Terminus::Aspects::Firmware::Synchronizer, :db do
       end
 
       it "answers failure" do
-        expect(synchronizer.call).to be_failure(message: "Danger!")
+        expect(synchronizer.call).to be_failure(
+          [
+            {message: "Danger!"},
+            {message: "Danger!"},
+            {message: "Danger!"}
+          ]
+        )
       end
     end
   end

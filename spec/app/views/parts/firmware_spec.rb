@@ -7,17 +7,33 @@ RSpec.describe Terminus::Views::Parts::Firmware do
 
   let(:firmware) { Factory.structs[:firmware] }
 
-  describe "#kind_label" do
-    it "answers capitalized label" do
-      expect(part.kind_label).to eq("Terminus")
+  describe "#first_model_link" do
+    it "answers link to model when models exist" do
+      firmware.define_singleton_method(:models) { [Factory.structs[:model, id: 1, label: "Test"]] }
+      expect(part.first_model_link).to eq(%(<a href="/models/1">Test</a>))
     end
 
-    context "with trmnl" do
-      let(:firmware) { Factory.structs[:firmware, kind: "trmnl"] }
+    it "answers missing model when models are empty" do
+      firmware.define_singleton_method(:models) { [] }
+      expect(part.first_model_link).to eq("Missing Model")
+    end
+  end
 
-      it "answers upcase" do
-        expect(part.kind_label).to eq("TRMNL")
+  describe "#total_models" do
+    it "answers total (one)" do
+      firmware.define_singleton_method(:models) { [Factory.structs[:model]] }
+      expect(part.total_models).to eq("1 model")
+    end
+
+    it "answers total (many)" do
+      firmware.define_singleton_method :models do
+        [
+          Factory.structs[:model],
+          Factory.structs[:model]
+        ]
       end
+
+      expect(part.total_models).to eq("2 models")
     end
   end
 end

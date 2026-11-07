@@ -363,7 +363,7 @@
         <div class="title title--xlarge">משפחת קרייסלר</div>
       </div>
 
-      {%- assign battery = device.battery_percentage | round -%}
+      {%- assign battery = extension.device.battery_percentage | round -%}
       <div class="progress-bar progress-bar--large">
         <div class="content">
           <span class="value value--xxsmall">{{ battery }}%</span>

@@ -105,7 +105,7 @@ RSpec.describe "/api/models", :db do
         "HTTP_AUTHORIZATION" => access_token,
         "CONTENT_TYPE" => "application/json"
 
-    expect(json_payload).to eq(Petail[status: :not_found].to_h)
+    expect(json_payload).to eq(RFC::API::Problem[status: :not_found].to_h)
   end
 
   it "creates model when valid" do
@@ -146,7 +146,7 @@ RSpec.describe "/api/models", :db do
          "HTTP_AUTHORIZATION" => access_token,
          "CONTENT_TYPE" => "application/json"
 
-    problem = Petail[
+    problem = RFC::API::Problem[
       type: "/problem_details#model_payload",
       status: :unprocessable_content,
       detail: "Validation failed.",
@@ -160,7 +160,7 @@ RSpec.describe "/api/models", :db do
       }
     ]
 
-    expect(json_payload).to match(problem.to_h)
+    expect(json_payload).to eq(problem.to_h)
   end
 
   it "patches model when valid" do
@@ -199,7 +199,7 @@ RSpec.describe "/api/models", :db do
           "HTTP_AUTHORIZATION" => access_token,
           "CONTENT_TYPE" => "application/json"
 
-    problem = Petail[
+    problem = RFC::API::Problem[
       type: "/problem_details#model_payload",
       status: :unprocessable_content,
       detail: "Validation failed.",
@@ -211,7 +211,7 @@ RSpec.describe "/api/models", :db do
       }
     ]
 
-    expect(json_payload).to match(problem.to_h)
+    expect(json_payload).to eq(problem.to_h)
   end
 
   it "deletes existing record" do
@@ -250,6 +250,6 @@ RSpec.describe "/api/models", :db do
            "HTTP_AUTHORIZATION" => access_token,
            "CONTENT_TYPE" => "application/json"
 
-    expect(json_payload).to match(data: {})
+    expect(json_payload).to eq(RFC::API::Problem[status: :not_found].to_h)
   end
 end

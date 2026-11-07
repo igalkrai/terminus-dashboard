@@ -1,0 +1,47 @@
+:toc: macro
+:toclevels: 5
+:figure-caption!:
+
+:metapath_link: link:https://alchemists.io/projects/metapath[Metapath]
+
+= Screens
+
+Screens are the low-level artifacts produced by designs, extensions, API use, and more where they ultimately end up being displayed on your device(s). No matter how a screen is generated for your device, you have full access to manipulate the screen further if desired. You can also build and supply your own screen(s) if desired.
+
+toc::[]
+
+== Import
+
+To bulk import multiple screens at once, use:
+
+[source,bash]
+----
+scripts/imports/screens <root_path_to_images>
+----
+
+The importer requires a root path to where you images are located on your file system. For example, if you have a bunch of images you'd like to import which are located in your `Scratch` folder, you could import them as follows:
+
+[source,bash]
+----
+scripts/imports/screens ~/Scratch
+----
+
+You can control the behavior of how your images are imported by adding a `meta.yml` (recommended) to the root of your folder. Example:
+
+[source,yaml]
+----
+attributes:
+  model:
+    name: og_bwry
+  playlist:
+    name: games
+    label: Games
+  screen:
+    mode: dither
+----
+
+The above says that all images will be processed using the TRMNL B/W/R/Y model (i.e. `og_bwry`) for a playlist with a name of `games` and a label of `Games`. Dithering is also enabled via the screen mode (default is `text`). If the playlist doesn't exist, it'll be created for you. _If the playlist does exist, all existing playlist items will be deleted first_ in order to ensure you don't end up with duplicate images.
+
+Once the import process starts, you'll see each image being processed in real-time complete with errors (if any).
+
+The above is made possible, and built upon, the {metapath_link} gem which you can check out the project documentation for further details.

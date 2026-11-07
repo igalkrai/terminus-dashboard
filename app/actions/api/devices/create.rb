@@ -6,7 +6,7 @@ module Terminus
       module Devices
         # The create action.
         class Create < Base
-          include Deps["aspects.devices.provisioner"]
+          include Deps["aspects.devices.creator"]
           include Initable[serializer: Serializers::Device]
 
           using Refines::Actions::Response
@@ -26,35 +26,29 @@ module Terminus
           private
 
           def process parameters, response
-            case provisioner.call(**parameters[:device])
+            case creator.call(**parameters[:device])
               in Success(device) then response.body = {data: serializer.new(device).to_h}.to_json
               in Failure(String => error) then not_found error, response
-              # :nocov:
-              # :nocov:
             end
           end
 
           def not_found error, response
-            payload = petail[
+            response.with_details problem[
               type: "/problem_details#device_payload",
               status: __method__,
               detail: error,
               instance: "/api/devices"
             ]
-
-            response.with body: payload.to_json, format: :problem_details, status: payload.status
           end
 
           def unprocessable_content parameters, response
-            payload = petail[
+            response.with_details problem[
               type: "/problem_details#device_payload",
               status: :unprocessable_content,
-              detail: "Validation failed.",
+              detail: translate("api.shared.errors.validation"),
               instance: "/api/devices",
               extensions: {errors: parameters.errors.to_h}
             ]
-
-            response.with body: payload.to_json, format: :problem_details, status: payload.status
           end
         end
       end

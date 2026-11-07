@@ -37,11 +37,11 @@ jobs:
 
       - checkout
 
-      - restore_cache:
-          name: Gems Restore
-          keys:
-            - gem-cache-5-{{.Branch}}-{{checksum "Gemfile.lock"}}
-            - gem-cache-
+      # - restore_cache:
+      #     name: Gems Restore
+      #     keys:
+      #       - gem-cache-10-{{.Branch}}-{{checksum "Gemfile.lock"}}
+      #       - gem-cache-
 
       - run:
           name: Gems Install
@@ -49,16 +49,16 @@ jobs:
             bundle config set path "vendor/bundle"
             bundle install
 
-      - save_cache:
-          name: Gems Store
-          key: gem-cache-5-{{.Branch}}-{{checksum "Gemfile.lock"}}
-          paths:
-            - vendor/bundle
+      # - save_cache:
+      #     name: Gems Store
+      #     key: gem-cache-10-{{.Branch}}-{{checksum "Gemfile.lock"}}
+      #     paths:
+      #       - vendor/bundle
 
       - restore_cache:
           name: Packages Restore
           keys:
-            - package-cache-5-{{.Branch}}-{{checksum "package.json"}}
+            - package-cache-10-{{.Branch}}-{{checksum "package.json"}}
             - package-cache-
 
       - run:
@@ -67,7 +67,7 @@ jobs:
 
       - save_cache:
           name: Packages Store
-          key: package-cache-5-{{.Branch}}-{{checksum "package.json"}}
+          key: package-cache-10-{{.Branch}}-{{checksum "package.json"}}
           paths:
             - node_modules
 

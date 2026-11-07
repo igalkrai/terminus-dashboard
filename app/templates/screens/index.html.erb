@@ -4,7 +4,14 @@
   <header class="bit-header">
     <h1 class="label">
       Screens
-      <%= render "shared/popovers/triggers/default", name: :overview, width: 20, height: 20 %>
+
+      <%= scope(
+            :popover_trigger_button,
+            tip: :info,
+            target: :overview,
+            width: 20,
+            height: 20
+          ).render %>
     </h1>
 
     <div class="bit-actions">
@@ -15,10 +22,6 @@
 
   <%= scope(:popover_default_content, name: :overview, label: "Overview").render do %>
     <p>Screens are the final artifacts produced when created via the Designs, Extensions, API requests, and so forth. Use these screens to add to your playlists for display on your device(s). Once created, you can modify these screens to alter what is displayed on your device(s).</p>
-
-    <p>All screens must use unique labels and names so you can distinguish between them.</p>
-
-    <p>Some screens have names that start with the <code>terminus_</code> prefix. These are special system screens provided for you automatically when a device sleeps, wakes, errors, etc. You can customize these screens and also delete them but be aware they might reappear.</p>
 
     <h2 class="label">Search</h2>
 
@@ -44,6 +47,7 @@
     </div>
   <% end %>
 
+  <%= scope(:tooltip_action_content, label: "Info").render %>
   <%= scope(:tooltip_action_content, label: "New").render %>
   <%= scope(:tooltip_action_content, label: "Search").render %>
   <%= scope(:tooltip_action_content, label: "Clear").render %>

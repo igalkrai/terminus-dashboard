@@ -12,13 +12,15 @@
   </header>
 
   <div class="bit-body">
-    <%= form_for :template, routes.path(:designs), class: "bit-card bit-form" do |form| %>
+    <%= form_for :design, routes.path(:designs), class: "bit-card bit-form" do |form| %>
       <h1 class="label">New Design</h1>
+
+      <%= render "shared/fields", form:, screens:, template:, fields:, errors: %>
 
       <%= scope(:form_field, key: :model_id, errors:).render do %>
         <label class="key" for="model_id">
           Model
-          <%= render "shared/popovers/triggers/default", name: :model %>
+          <%= scope(:popover_trigger_button, tip: :info, target: :model).render %>
         </label>
 
         <%= tag.select id: :model_id, name: :model_id, class: :value do %>
@@ -30,12 +32,12 @@
         <% end %>
       <% end %>
 
-      <%= render "shared/fields", form:, screens:, template:, fields:, errors: %>
-
       <div class="form-actions">
         <%= form.submit "Save", class: "bit-button-accept" %>
         <%= link_to "Cancel", routes.path(:designs), class: "bit-button-decline" %>
       </div>
     <% end %>
   </div>
+
+  <%= scope(:tooltip_action_content, label: "Info").render %>
 </section>

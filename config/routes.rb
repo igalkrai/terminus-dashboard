@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "rack/attack"
 require "sidekiq/web"
 
 require "sidekiq-scheduler/web"
@@ -8,25 +9,57 @@ require_relative "../app/aspects/designs/middleware"
 
 module Terminus
   # The application base routes.
-  # rubocop:todo Metrics/ClassLength
+  # rubocop:todo-next Metrics/ClassLength
   class Routes < Hanami::Routes
-    slice(:authentication, at: "/") { use Authentication::Middleware }
-
+    # Order matters.
+    use Rack::Attack
     use Aspects::Designs::Middleware, pattern: %r(/preview/(?<id>.+))
+    use Rack::Static,
+        root: "public",
+        urls: [
+          "/.well-known/security.txt",
+          "/fonts",
+          "/robots.txt",
+          "/uploads"
+        ]
     use Rack::Deflater
-    use Rack::Static, root: "public", urls: ["/.well-known/security.txt", "/fonts", "/uploads"]
 
-    mount Sidekiq::Web, at: "/sidekiq"
+    slice :authentication, at: "/" do
+      use Authentication::Middleware
+      mount Middleware::SidekiqAuth.new(Sidekiq::Web), at: "/sidekiq"
+    end
 
     get "/", to: "dashboard.show", as: :root
 
-    # rubocop:todo Metrics/BlockLength
+    # rubocop:todo-next Metrics/BlockLength
     scope "api" do
       get "/devices", to: "api.devices.index", as: :devices
       get "/devices/:id", to: "api.devices.show", as: :device
       post "/devices", to: "api.devices.create", as: :devices
       patch "/devices/:id", to: "api.devices.patch", as: :device
       delete "/devices/:id", to: "api.devices.delete", as: :device
+
+      get "/extensions", to: "api.extensions.index", as: :extensions
+      get "/extensions/:id", to: "api.extensions.show", as: :extension
+      post "/extensions", to: "api.extensions.create", as: :extensions
+      patch "/extensions/:id", to: "api.extensions.patch", as: :extension
+      delete "/extensions/:id", to: "api.extensions.delete", as: :extension
+
+      get "/extensions/:extension_id/exchanges",
+          to: "api.extensions.exchanges.index",
+          as: :extension_exchanges
+      get "/extensions/:extension_id/exchanges/:id",
+          to: "api.extensions.exchanges.show",
+          as: :extension_exchange
+      post "/extensions/:extension_id/exchanges",
+           to: "api.extensions.exchanges.create",
+           as: :extension_exchanges
+      patch "/extensions/:extension_id/exchanges/:id",
+            to: "api.extensions.exchanges.patch",
+            as: :extension_exchange
+      delete "/extensions/:extension_id/exchanges/:id",
+             to: "api.extensions.exchanges.delete",
+             as: :extension_exchange
 
       resource :display, to: "api.display", only: :show
 
@@ -51,16 +84,18 @@ module Terminus
       delete "/playlists/:id", to: "api.playlists.delete", as: :playlist
 
       get "/screens", to: "api.screens.index", as: :screens
+      get "/screens/:id", to: "api.screens.show", as: :screen
       post "/screens", to: "api.screens.create", as: :screens
       patch "/screens/:id", to: "api.screens.patch", as: :screen
       delete "/screens/:id", to: "api.screens.delete", as: :screen
 
       resource :setup, to: "api.setup", only: :show
     end
-    # rubocop:enable Metrics/BlockLength
 
     scope "bulk" do
       delete "/devices/:device_id/logs", to: "bulk.devices.logs.delete", as: :device_log
+      post "/devices/import", to: "bulk.devices.import.create", as: :device_import
+
       delete "/firmware", to: "bulk.firmware.delete", as: :firmware
     end
 
@@ -77,11 +112,15 @@ module Terminus
     delete "/devices/:device_id/logs/:id", to: "devices.logs.delete", as: :device_log
 
     get "/designs", to: "designs.index", as: :designs
+    get "/designs/:id", to: "designs.show", as: :design
     get "/designs/new", to: "designs.new", as: :design_new
     post "/designs", to: "designs.create", as: :designs
     get "/designs/:id/edit", to: "designs.edit", as: :design_edit
     put "/designs/:id", to: "designs.update", as: :design
     delete "/designs/:id", to: "designs.delete", as: :design
+
+    get "/designs/:design_id/export", to: "designs.export.show", as: :design_export
+    post "/designs/import", to: "designs.import.create", as: :design_import
 
     get "/extensions", to: "extensions.index", as: :extensions
     get "/extensions/new", to: "extensions.new", as: :extension_new
@@ -191,5 +230,4 @@ module Terminus
 
     slice(:health, at: "/up") { root to: "show" }
   end
-  # rubocop:enable Metrics/ClassLength
 end

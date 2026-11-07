@@ -19,16 +19,17 @@ module Terminus
 
             required(:firmware).filled :hash do
               optional(:version).filled Types::Version
-              optional(:kind).filled :string
               optional(:uri).filled :string
             end
+
+            required(:model_ids).filled(:array).each(:integer)
           end
 
           def handle request, response
             parameters = request.params
 
             if parameters.valid?
-              process(*parameters.to_h.values_at(:id, :firmware), response)
+              process parameters.to_h, response
             else
               unprocessable_content parameters, response
             end
@@ -36,9 +37,10 @@ module Terminus
 
           private
 
-          def process id, parameters, response
-            uri = parameters.delete :uri
-            record = repository.update id, parameters
+          def process parameters, response
+            id, attributes, model_ids = parameters.values_at :id, :firmware, :model_ids
+            uri = attributes.delete :uri
+            record = repository.update_with_models id, attributes, model_ids
 
             return response.with body: {data: serializer.new(record).to_h}.to_json unless uri
 
@@ -63,26 +65,22 @@ module Terminus
           end
 
           def unprocessable_download uri, response
-            payload = petail[
+            response.with_details problem[
               type: "/problem_details#firmware_payload",
               status: :unprocessable_content,
               detail: "Invalid URI: #{uri}.",
               instance: "/api/firmware"
             ]
-
-            response.with body: payload.to_json, format: :problem_details, status: payload.status
           end
 
           def unprocessable_content parameters, response
-            payload = petail[
+            response.with_details problem[
               type: "/problem_details#firmware_payload",
               status: :unprocessable_content,
-              detail: "Validation failed.",
+              detail: translate("api.shared.errors.validation"),
               instance: "/api/firmware",
               extensions: {errors: parameters.errors.to_h}
             ]
-
-            response.with body: payload.to_json, format: :problem_details, status: payload.status
           end
         end
       end

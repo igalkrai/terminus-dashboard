@@ -1,46 +1,74 @@
 # frozen_string_literal: true
 
+require "initable"
+
 module Terminus
   module Aspects
     module Firmware
       # A firmware attachment synchronizer with Core server.
       class Synchronizer
-        include Deps[:trmnl_api, "aspects.downloader", repository: "repositories.firmware"]
+        MODEL_MAP = {trmnl_bwry: ["og_bwry"], trmnl_og: %w[og_png og_plus], trmnl_x: ["v2"]}.freeze
+
+        include Deps[
+          :trmnl_api,
+          "aspects.downloader",
+          "aspects.firmware.creator",
+          repository: "repositories.firmware",
+          model_repository: "repositories.model"
+        ]
+        include Initable[model_map: MODEL_MAP, struct: Structs::Firmware]
         include Dry::Monads[:result]
 
-        def initialize(struct: Structs::Firmware.new, **)
-          @struct = struct
-          super(**)
-        end
-
         def call
-          result = trmnl_api.latest_firmware
-
-          case result
-            in Success(payload) then download(payload).bind { attach it, payload.version }
-            else result
-          end
+          model_map.keys
+                   .flat_map { fetch it }
+                   .then do |collection|
+                     if collection.all? struct then Success collection
+                     else Failure(collection.grep_v(struct))
+                     end
+                   end
         end
 
         private
 
-        attr_reader :struct
+        def fetch name
+          result = trmnl_api.firmware_latest model_name: name
 
-        def download(payload) = downloader.call payload.url
-
-        def attach response, version
-          record = repository.find_by(version:)
-
-          return Success record if record
-
-          struct.upload StringIO.new(response), metadata: {"filename" => "#{version}.bin"}
-          struct.valid? ? Success(create(version, struct)) : Failure(struct.errors)
+          case result
+            in Success(payload) then download name, payload
+            in Failure(errors) then errors
+          end
         end
 
-        def create version, struct
-          repository.create version: version,
-                            kind: "trmnl",
-                            attachment_data: struct.attachment_attributes
+        def download name, payload
+          case downloader.call payload.url
+            in Success(response) then find_or_create response, name, payload.version
+            in Failure(payload) then payload
+          end
+        end
+
+        def find_or_create response, name, version
+          model_names = model_map[name]
+          models = model_repository.where name: model_names
+          firmware = repository.where(name: model_names, version:).first
+
+          return firmware if firmware
+
+          attach response, version, models
+        end
+
+        def attach response, version, models
+          struct.new.then do |instance|
+            instance.upload StringIO.new(response), metadata: {"filename" => "#{version}.bin"}
+            instance.valid? ? create(version, instance, models) : instance.errors
+          end
+        end
+
+        def create version, struct, models
+          repository.create_with_models(
+            {version:, attachment_data: struct.attachment_attributes},
+            models.map(&:id)
+          )
         end
       end
     end

@@ -11,7 +11,8 @@ RSpec.describe "Extension Exchanges", :db do
     click_link "New"
     click_button "Save"
 
-    expect(page).to have_text("must be filled")
+    expect(page).to have_text("Exchange template must be filled")
+    expect(page).to have_text(/Template.+must be filled/m)
 
     fill_in "exchange[template]", with: "https://test.io"
     click_button "Save"
@@ -19,16 +20,18 @@ RSpec.describe "Extension Exchanges", :db do
     expect(page).to have_text("https://test.io")
   end
 
-  it "edits", :aggregate_failures, :js do
+  it "edits", :aggregate_failures do
     visit routes.path(:extension_exchange_edit, extension_id: extension.id, id: exchange.id)
     fill_in "exchange[template]", with: nil
     click_button "Save"
 
-    expect(page).to have_text("must be filled")
+    expect(page).to have_text("Exchange template must be filled")
+    expect(page).to have_text(/Template.+must be filled/m)
 
-    fill_in "exchange[template]", with: "https://test.io/1"
+    fill_in "exchange[template]", with: "https://test.io"
+    click_button "Save"
 
-    expect(page).to have_field(with: "https://test.io/1")
+    expect(page).to have_text("https://test.io")
   end
 
   it "deletes", :js do

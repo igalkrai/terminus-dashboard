@@ -4,16 +4,17 @@
 
 :chrome_link: link:https://www.google.com/chrome[Google Chrome]
 :core_api_link: link:https://trmnl.com/api-docs/index.html[Core API]
-:devices_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/devices.adoc[Devices]
 :doc_api_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/api.adoc[API]
 :doc_configuration_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/configuration.adoc[Configuration]
 :doc_development_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/development.adoc[Development]
+:doc_devices_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/devices.adoc[Devices]
 :doc_docker_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/docker.adoc[Docker]
 :doc_extensions_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/extensions.adoc[Extensions]
+:doc_internationalization_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/internationalization.adoc[Internationalization]
 :doc_jobs_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/jobs.adoc[Jobs]
-:doc_kubernetes_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/kubernetes.adoc[Kubernetes]
 :doc_raspberry_pi_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/raspberry_pi.adoc[Raspberry PI]
 :doc_render_link: link:[link:https://github.com/usetrmnl/terminus/blob/main/doc/render.adoc[Render]]
+:doc_screens_link: link:https://github.com/usetrmnl/terminus/blob/main/doc/screens.adoc[Screens]
 :docker_link: link:https://www.docker.com[Docker]
 :dragonfly_link: link:https://www.dragonflydb.io[Dragonfly]
 :esbuild_link: link:https://esbuild.github.io[esbuild]
@@ -186,7 +187,7 @@ Also, once logged in, you can manage your settings as follows:
 
 === Devices
 
-See {devices_link} documentation for details.
+See {doc_devices_link} documentation for details.
 
 === Firmware
 
@@ -202,6 +203,10 @@ In case it's of interest, unofficial firmware specific Waveshare (device and dis
 === Extensions
 
 See {doc_extensions_link} documentation for details.
+
+=== Screens
+
+See {doc_screens_link} documentation for details.
 
 === Jobs
 
@@ -221,11 +226,15 @@ See {doc_raspberry_pi_link} documentation for details.
 
 === Kubernetes
 
-See {doc_kubernetes_link} documentation for details.
+For Kubernetes support, check out the link:https://github.com/pradeepbbl/terminus-kubernetes[Terminus Kubernetes] project, as managed by Pradeep Mishra, for documentation and full automation.
 
 === Render
 
 See {doc_render_link} documentation for details.
+
+=== Internationalization
+
+See {doc_internationalization_link} documentation for details.
 
 == Development
 
@@ -258,7 +267,7 @@ While this project is distributed under the permissive link:/LICENSE.adoc[MIT Li
 
 == Survey
 
-We'd love to learn more about how you use Terminus and welcome you to link:https://docs.google.com/forms/d/1FLVa9I1u6wk6ExMYj-l9P9a_Kw7XGXCPPyC0SSvv3hs/viewform[take our survey]. It's short and would help us serve your better. Thanks. 🙇🏻
+link:https://docs.google.com/forms/d/1FLVa9I1u6wk6ExMYj-l9P9a_Kw7XGXCPPyC0SSvv3hs/viewform[Take our survey] to help us learn more about how you use Terminus along with any feedback you might have.
 
 == Credits
 

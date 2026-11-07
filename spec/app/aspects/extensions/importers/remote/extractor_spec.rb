@@ -20,5 +20,9 @@ RSpec.describe Terminus::Aspects::Extensions::Importers::Remote::Extractor do
         )
       )
     end
+
+    it "fails to extract content when recipe doesn't exist" do
+      expect(extractor.call(666)).to match(Failure(kind_of(HTTP::Response)))
+    end
   end
 end

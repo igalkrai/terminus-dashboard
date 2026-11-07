@@ -1,6 +1,5 @@
 # frozen_string_literal: true
 
-require "core"
 require "initable"
 
 module Terminus
@@ -8,12 +7,8 @@ module Terminus
     module Extensions
       # Renders curl command for exchange and associated data.
       class Curler
-        include Deps["aspects.extensions.uri_builder"]
-        include Initable[json_formatter: proc { Terminus::Aspects::JSONFormatter }]
-
-        def self.render_request verb, uri
-          verb.include?("get") ? "curl #{uri}" : "curl --request #{verb.upcase} #{uri}"
-        end
+        include Deps["aspects.extensions.exchanges.request_builder"]
+        include Initable[command: "curl", json_formatter: proc { Terminus::Aspects::JSONFormatter }]
 
         def self.render_headers attributes
           return if Hash(attributes).empty?
@@ -22,20 +17,18 @@ module Terminus
         end
 
         def call extension, exchange
-          uri_builder.call(extension, exchange.template)
-                     .map { |uri| render uri, exchange }
-                     .join "\n"
+          request_builder.call(exchange, extension)
+                         .map { render it }
+                         .join "\n"
         end
 
         private
 
-        def render uri, exchange
-          klass = self.class
-
+        def render request
           [
-            klass.render_request(exchange.verb, uri),
-            *klass.render_headers(exchange.headers),
-            render_body(exchange.body)
+            render_command(request),
+            *self.class.render_headers(request.headers),
+            render_body(request.body)
           ].compact
            .each
            .with_index
@@ -43,10 +36,15 @@ module Terminus
            .join " \\\n"
         end
 
-        def render_body attributes
-          return if Hash(attributes).empty?
+        def render_command request
+          verb = request.verb
+          uri = request.uri
 
-          "--data $'#{json_formatter.call attributes}'"
+          verb.include?("get") ? "#{command} #{uri}" : "#{command} --request #{verb.upcase} #{uri}"
+        end
+
+        def render_body attributes
+          "--data $'#{json_formatter.call attributes}'" unless Hash(attributes).empty?
         end
       end
     end

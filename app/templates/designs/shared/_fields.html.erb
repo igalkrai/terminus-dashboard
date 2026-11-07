@@ -1,27 +1,37 @@
 <%= scope(:form_field, key: :label, errors:).render do %>
-  <label class="key" for="template_label">
+  <label class="key" for="design_label">
     Label
-    <%= render "shared/popovers/triggers/default", name: :label %>
+    <%= scope(:popover_trigger_button, tip: :info, target: :label).render %>
   </label>
 
   <%= form.text_field :label,
-                      id: :template_label,
+                      id: :design_label,
                       value: field_for(:label, fields, template),
                       class: :value,
                       autocomplete: :off %>
 <% end %>
 
 <%= scope(:form_field, key: :name, errors:).render do %>
-  <label class="key" for="template_name">
+  <label class="key" for="design_name">
     Name
-    <%= render "shared/popovers/triggers/default", name: :name %>
+    <%= scope(:popover_trigger_button, tip: :info, target: :name).render %>
   </label>
 
   <%= form.text_field :name,
-                      id: :template_name,
+                      id: :design_name,
                       value: field_for(:name, fields, template),
                       class: :value,
                       autocomplete: :off %>
+<% end %>
+
+<%= scope(:form_field, key: :mode, errors:).render do %>
+  <label class="key" for="design_mode">
+    Mode
+    <%= scope(:popover_trigger_button, tip: :info, target: :mode).render %>
+  </label>
+
+  <% options = [["Text", "text"], ["Art", "dither"]] %>
+  <%= form.select :mode, options, id: :design_mode, class: :value %>
 <% end %>
 
 <%= form.text_area :content,

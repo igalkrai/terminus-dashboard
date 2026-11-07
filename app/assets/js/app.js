@@ -2,6 +2,7 @@ import "htmx-slide/build/style.css";
 
 import "../css/settings.css";
 import "../css/colors.css";
+import "../css/properties.css";
 import "../css/keyframes.css";
 import "../css/view_transitions.css";
 import "../css/defaults.css";
@@ -40,7 +41,7 @@ window.htmx = htmx;
 
 Alpine.start();
 
-import "htmx-ext-sse";
+import "htmx.org/dist/ext/hx-sse";
 import "htmx-remove";
 import "htmx-slide";
 

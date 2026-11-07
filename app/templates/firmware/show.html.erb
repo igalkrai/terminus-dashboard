@@ -27,17 +27,14 @@
       <%= scope(:tooltip_action_content, label: "Download").render %>
 
       <dl class="bit-definition-list">
-        <dt class="key">
-          Version
-          <%= render "shared/popovers/triggers/default", name: :version %>
-        </dt>
-        <dd class="value"><%= firmware.version %></dd>
-
-        <dt class="key">
-          Kind
-          <%= render "shared/popovers/triggers/default", name: :kind %>
-        </dt>
-        <dd class="value"><%= firmware.kind %></dd>
+        <dt class="key">Models</dt>
+        <dd class="value">
+          <ul class="list">
+            <% firmware.models.each do |model| %>
+              <%= link_to model.label, routes.path(:model, id: model.id) %>
+            <% end %>
+          </ul>
+        </dd>
 
         <dt class="key">Size</dt>
         <dd class="value"><%= size firmware.attachment_size %></dd>
@@ -50,6 +47,6 @@
       </dl>
     </div>
   </div>
-</section>
 
-<%= render "firmware/shared/popovers/all" %>
+  <%= scope(:tooltip_action_content, label: "Info").render %>
+</section>

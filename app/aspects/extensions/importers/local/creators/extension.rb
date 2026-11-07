@@ -11,8 +11,13 @@ module Terminus
           module Creators
             # Creates extension.
             class Extension
-              include Deps[:logger, "aspects.jobs.schedule", repository: "repositories.extension"]
-              include Initable[error_joiner: proc { Terminus::Aspects::Errors::ResultJoiner }]
+              include Deps[
+                "aspects.errors.detailer",
+                :i18n,
+                :logger,
+                "aspects.jobs.schedule",
+                repository: "repositories.extension"
+              ]
               include Dry::Monads[:result]
 
               def initialize(schema: Schemas::Extension, problem: Aspects::Errors::Problem, **)
@@ -24,7 +29,7 @@ module Terminus
               def call attributes
                 schema.call(attributes)
                       .to_monad
-                      .alt_map { error_joiner.call "Extension", it }
+                      .alt_map { detailer.call it, "Extension " }
                       .fmap { create it.to_h }
               rescue ROM::SQL::UniqueConstraintError => error
                 Failure problem.duplicate(error.message, nil).detail
@@ -43,7 +48,11 @@ module Terminus
 
               def log extension
                 logger.debug do
-                  {tags: [{extension_id: extension.id}], message: "Imported extension."}
+                  message = i18n.translate(
+                    "aspects.extensions.importers.local.creators.extension.imported"
+                  )
+
+                  {tags: [{extension_id: extension.id}], message:}
                 end
               end
             end

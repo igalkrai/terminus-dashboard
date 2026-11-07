@@ -1,0 +1,168 @@
+# frozen_string_literal: true
+
+require "hanami_helper"
+
+RSpec.describe Terminus::Chromium do
+  subject(:browser) { described_class.new }
+
+  include_context "with application dependencies"
+
+  describe "#initialize" do
+    it "logs options" do
+      described_class.new
+
+      expect(logger.reread).to match(
+        /DEBUG.+Ferrum browser options.+timeout.+process_timeout.+js_errors.+browser_options.+/
+      )
+    end
+
+    context "with processing timeout error" do
+      subject(:browser) { described_class.new client: }
+
+      before { allow(settings).to receive(:to_h).and_return(ferrum_process_timeout: 0.01) }
+
+      it "logs fatal message" do
+        described_class.new
+      rescue Ferrum::ProcessTimeoutError
+        expect(logger.reread).to match(/FATAL.+Browser process timed out after 0.01 seconds+/)
+      end
+
+      it "fails with same exception" do
+        expectation = proc { described_class.new }
+        expect(&expectation).to raise_error(Ferrum::ProcessTimeoutError, /within 0.01 seconds/)
+      end
+    end
+  end
+
+  describe "#call" do
+    let(:client) { class_double Ferrum::Browser, new: instance }
+    let(:instance) { instance_spy Ferrum::Browser }
+
+    it "doesn't restart when maximum pages haven't been reached" do
+      browser.call
+      expect(instance).not_to have_received(:restart)
+    end
+
+    it "answers success" do
+      expect(browser.call).to be_success
+    end
+
+    context "with maximum renders reached" do
+      subject(:browser) { described_class.new client:, maximum_renders: 1 }
+
+      it "resets render count" do
+        browser.call
+        expect(browser.inspect).to match(/renders.+value:0/)
+      end
+
+      it "restarts browser" do
+        browser.call
+        expect(instance).to have_received(:restart)
+      end
+
+      it "logs debug message" do
+        browser.call
+        expect(logger.reread).to match(/DEBUG.+Browser restarted after maximum renders reached: 1/)
+      end
+    end
+
+    context "with dead browser error" do
+      subject(:browser) { described_class.new client: }
+
+      let(:message) { "Recovered dead browser due to crash, out of memory, or resource limit." }
+
+      before { allow(instance).to receive(:create_page).and_raise(Ferrum::DeadBrowserError) }
+
+      it "restarts client" do
+        browser.call
+        expect(instance).to have_received(:restart)
+      end
+
+      it "logs warn message" do
+        browser.call
+        expect(logger.reread).to match(/WARN.+#{message}/)
+      end
+
+      it "logs error message when restart failed" do
+        allow(instance).to receive(:restart).and_raise(Ferrum::Error, "Danger!")
+        browser.call
+
+        expect(logger.reread).to match(/ERROR.+Browser recovery failed.+Danger!/)
+      end
+
+      it "answers success" do
+        expect(browser.call).to be_success
+      end
+    end
+
+    context "with browser error" do
+      subject(:browser) { described_class.new client: }
+
+      let :message do
+        "Unable to capture screenshot due to an issue with " \
+        "page navigation, element interaction, or something else."
+      end
+
+      before { allow(instance).to receive(:create_page).and_raise(Ferrum::BrowserError, "Danger!") }
+
+      it "logs error message" do
+        browser.call
+        expect(logger.reread).to match(/ERROR.+#{message}.+/)
+      end
+
+      it "answers failure" do
+        expect(browser.call).to be_failure(message)
+      end
+    end
+
+    context "with no such target error" do
+      subject(:browser) { described_class.new client: }
+
+      let(:message) { "Browser has no target due to page being closed or crashed. Error: Danger!" }
+
+      before do
+        allow(instance).to receive(:create_page).and_raise(Ferrum::NoSuchTargetError, "Danger!")
+      end
+
+      it "logs error message" do
+        browser.call
+        expect(logger.reread).to match(/ERROR.+#{message}/)
+      end
+
+      it "answers failure" do
+        expect(browser.call).to be_failure(message)
+      end
+    end
+
+    context "with timeout error" do
+      subject(:browser) { described_class.new client: }
+
+      let :message do
+        "Browser timed out after 30 seconds. " \
+        "This might be due to the page taking a long time to load."
+      end
+
+      it "logs error message" do
+        allow(instance).to receive(:create_page).and_raise(Ferrum::TimeoutError, "Danger!")
+        browser.call
+
+        expect(logger.reread).to match(/ERROR.+#{message}.+/)
+      end
+
+      it "answers failure" do
+        allow(instance).to receive(:create_page).and_raise(Ferrum::TimeoutError)
+        expect(browser.call).to be_failure(message)
+      end
+    end
+  end
+
+  describe "#inspect" do
+    it "lists i18n by type only" do
+      expect(browser.inspect).to match_inspection(i18n: "Hanami::Providers::I18n::Backend")
+    end
+
+    it "lists client by only" do
+      expect(browser.inspect).to match_inspection(client: "Ferrum::Browser")
+    end
+  end
+end

@@ -3,14 +3,21 @@
 require "hanami_helper"
 
 RSpec.describe Terminus::Structs::ScreenTemplate do
-  subject(:screen_template) { Factory.structs[:screen_template, label: "Test", name: "test"] }
+  subject(:screen_template) { Factory.structs[:screen_template, name: "test", label: "Test"] }
+
+  describe "#export_attributes" do
+    it "answers attributes" do
+      expect(screen_template.export_attributes).to eq(name: "test", label: "Test", mode: "text")
+    end
+  end
 
   describe "#screen_attributes" do
     it "answers attributes" do
       expect(screen_template.screen_attributes).to eq(
-        template_id: 1,
-        label: "Test",
+        template_id: screen_template.id,
         name: "test",
+        label: "Test",
+        mode: "text",
         content: "<h1>Test</h1>"
       )
     end

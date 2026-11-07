@@ -4,7 +4,7 @@
 
 :core_link: link:https://trmnl.com[Core]
 :image_magick_geometry_link: link:https://www.imagemagick.org/script/command-line-processing.php#geometry[ImageMagick Geometry]
-:petail_link: link:https://alchemists.io/projects/petail[Petail]
+:rfc_api_problem_link: link:https://alchemists.io/projects/rfc-api-problem[RFC API Problem]
 :rodauth_link: link:https://rodauth.jeremyevans.net[Rodauth]
 :trmnl_api_gem_link: link:https://github.com/usetrmnl/trmnl-api[TRMNL API]
 :trmnl_firmware_link: link:https://github.com/usetrmnl/trmnl-firmware[TRMNL Firmware]
@@ -31,29 +31,20 @@ In truth, the design of this API request should have been a POST request but the
 [source,bash]
 ----
 curl "https://localhost:2443/api/display" \
-     -H 'ID: <redacted>' \
-     -H 'Content-Type: application/json'
-----
-
-You can also use `ACCESS_TOKEN` but `ID` is recommended. Example:
-
-[source,bash]
-----
-curl "https://localhost:2443/api/display" \
      -H 'ACCESS_TOKEN: <redacted>' \
      -H 'Content-Type: application/json'
 ----
 
 The {trmnl_firmware_link} will include the following headers in each HTTP request. All are optional except for the `ID` header. Here's the full list:
 
-* `ACCESS_TOKEN`: The device API when making Display API requests. Used by firmware and simulators to provision and authenticate a device.
+* `ACCESS_TOKEN`: The device API Key when making Display API requests. Used by firmware and simulators to provision and authenticate a device.
 * `BATTERY_CAPACITY`: Ratio of current and max battery capacity. Example: `11300/11420`.
 * `BATTERY_CHARGING`: Boolean for if the battery is charging or not. Example: `0` or `1`.
 * `BATTERY_COUNT`: The number batteries avaiable. Example: `2`.
 * `BATTERY_CURRENT`: The battery current. Can be negative or positive. Example: `115`.
 * `BATTERY_HEALTH`: The battery health. Range: `-1` to `100`.
 * `BATTERY_TEMP`: The battery temperature in Celsius. Range: `-1` to infinity.
-* `BATTERY_VOLTAGE`: The remaining battery level. This is a float (usually 0.0 to 4.1).
+* `BATTERY_VOLTAGE`: The remaining battery level. This is a float (3.0 to 4.2, roughly).
 * `FW_VERSION`: The firmware version (i.e. `1.2.3`).
 * `HEIGHT`: The device height. Example: 480.
 * `HOST`: The host (usually the IP address).
@@ -82,7 +73,7 @@ The following is an example of the response sent back to the device which also h
 [source,json]
 ----
 {
-  "filename": "demo.png",
+  "filename": "demo-1787592144",
   "firmware_url": null,
   "firmware_version": null,
   "image_url": "http://192.168.0.13:2300/uploads/66584f02f7d0477b0b549efd234296e6.png",
@@ -108,7 +99,7 @@ Used by device firmware to log information about your device. Mostly used for de
 [source,bash]
 ----
 curl -X "POST" "https://localhost:2443/api/log" \
-     -H 'ID: <redacted>' \
+     -H 'ACCESS_TOKEN: <redacted>' \
      -H 'Content-Type: application/json' \
      -d $'{
   "logs": [
@@ -134,6 +125,8 @@ curl -X "POST" "https://localhost:2443/api/log" \
   ]
 }'
 ----
+
+The `ACCESS_TOKEN` header is _required_ while the `ID` header is _optional_. The `ACCESS_TOKEN` value must be the API key originally asigned to the device when auto-provisioning the device in order to properly authenticate and record the device log.
 ====
 
 .Response
@@ -155,15 +148,6 @@ curl "https://localhost:2443/api/setup" \
      -H 'ID: <redacted>' \
      -H 'Content-Type: application/json'
 ----
-
-You can also use `ACCESS_TOKEN` but `ID` is recommended. Example:
-
-[source,bash]
-----
-curl "https://localhost:2443/api/setup" \
-     -H 'ACCESS_TOKEN: <redacted>' \
-     -H 'Content-Type: application/json'
-----
 ====
 
 .Response
@@ -178,6 +162,8 @@ curl "https://localhost:2443/api/setup" \
   "status": 200
 }
 ----
+
+The API key will be an empty string if the device has already been setup.
 ====
 
 == Server
@@ -187,7 +173,7 @@ curl "https://localhost:2443/api/setup" \
 These endpoints are unique to this server implementation and allow you to interact via your favorite JSON Data API client. The following features are supported:
 
 * All endpoints require authentication using JWT tokens which is explained below.
-* All error responses adhere to link:https://www.rfc-editor.org/rfc/rfc9457[RFC 9457 (Problem Details for HTTP APIs)] as implemented by the {petail_link} gem which allows you to quickly parse the error responses in your own application if desired.
+* All error responses use the {rfc_api_problem_link} gem to quickly parse the error responses in your own application if desired.
 
 === Authentication
 
@@ -259,12 +245,12 @@ Allows you to manage your devices.
 ====
 [source,bash]
 ----
-# All devices.
+# Multiple
 curl "https://localhost:2443/api/devices" \
      -H 'Authorization: <redacted>' \
      -H 'Content-Type: application/json'
 
-# Single device.
+# Single.
 curl "https://localhost:2443/api/devices/1" \
      -H 'Authorization: <redacted>' \
      -H 'Content-Type: application/json'
@@ -276,7 +262,7 @@ curl "https://localhost:2443/api/devices/1" \
 ====
 [source,json]
 ----
-# All devices.
+# Multiple.
 {
   "data": [
     {
@@ -287,7 +273,8 @@ curl "https://localhost:2443/api/devices/1" \
       "mac_address": "02:A1:B2:C3:D4:E5",
       "api_key": "jiMMHN2kMSzpSi3n3bh4dmkNfgw5Z2",
       "firmware_profile": true,
-      "firmware_update": true,
+      "firmware_update": false,
+      "firmware_reset": false,
       "firmware_version": "1.8.6",
       "wifi_band": 2.4,
       "wifi_signal": -64,
@@ -301,8 +288,10 @@ curl "https://localhost:2443/api/devices/1" \
       "wake_duration": 5591,
       "width": 800,
       "height": 480,
+      "panel_revision": "abcdef12",
       "display_compatibility": false,
       "display_profile": "default",
+      "command": "none",
       "touch_bar": "tap",
       "sleep_start_at": "18:00:00",
       "sleep_stop_at": "06:00:00",
@@ -313,7 +302,7 @@ curl "https://localhost:2443/api/devices/1" \
   ]
 }
 
-# Single device.
+# Single.
 {
   "data": {
     "id": 1,
@@ -323,7 +312,8 @@ curl "https://localhost:2443/api/devices/1" \
     "mac_address": "02:A1:B2:C3:D4:E5",
     "api_key": "jiMMHN2kMSzpSi3n3bh4dmkNfgw5Z2",
     "firmware_profile": true,
-    "firmware_update": true,
+    "firmware_update": false,
+    "firmware_reset": false,
     "firmware_version": "1.8.6",
     "wifi_band": 2.4,
     "wifi_signal": -64,
@@ -337,8 +327,10 @@ curl "https://localhost:2443/api/devices/1" \
     "wake_duration": 5591,
     "width": 800,
     "height": 480,
+    "panel_revision": "abcdef12",
     "display_compatibility": false,
     "display_profile": "default",
+    "command": "none",
     "touch_bar": "tap",
     "sleep_start_at": "18:00:00",
     "sleep_stop_at": "06:00:00",
@@ -383,7 +375,8 @@ curl -X "POST" "https://localhost:2443/api/devices" \
     "mac_address": "02:A1:B2:C3:D4:E5",
     "api_key": "jiMMHN2kMSzpSi3n3bh4dmkNfgw5Z2",
     "firmware_profile": true,
-    "firmware_update": true,
+    "firmware_update": false,
+    "firmware_reset": false,
     "firmware_version": "1.8.6",
     "wifi_band": 2.4,
     "wifi_signal": -64,
@@ -397,8 +390,10 @@ curl -X "POST" "https://localhost:2443/api/devices" \
     "wake_duration": 5591,
     "width": 800,
     "height": 480,
+    "panel_revision": "abcdef12",
     "display_compatibility": false,
     "display_profile": "default",
+    "command": "none",
     "touch_bar": "tap",
     "sleep_start_at": "18:00:00",
     "sleep_stop_at": "06:00:00",
@@ -428,7 +423,8 @@ curl -X "POST" "https://localhost:2443/api/devices" \
     "mac_address": "02:A1:B2:C3:D4:E5",
     "api_key": "jiMMHN2kMSzpSi3n3bh4dmkNfgw5Z2",
     "firmware_profile": true,
-    "firmware_update": true,
+    "firmware_update": false,
+    "firmware_reset": false,
     "firmware_version": "1.8.6",
     "wifi_band": 2.4,
     "wifi_signal": -64,
@@ -442,8 +438,10 @@ curl -X "POST" "https://localhost:2443/api/devices" \
     "wake_duration": 5591,
     "width": 800,
     "height": 480,
+    "panel_revision": "abcdef12",
     "display_compatibility": false,
     "display_profile": "default",
+    "command": "none",
     "touch_bar": "tap",
     "sleep_start_at": "18:00:00",
     "sleep_stop_at": "06:00:00",
@@ -472,7 +470,7 @@ curl -X "PATCH" "https://localhost:2443/api/devices/1" \
 }'
 ----
 
-You can change a single attribute or multiple attributes at once. All attributes found in the POST request example are supported.
+You can change a single attribute or multiple attributes at once. All attributes found in the POST request are supported.
 ====
 
 .PATCH Response
@@ -489,7 +487,8 @@ You can change a single attribute or multiple attributes at once. All attributes
     "mac_address": "02:A1:B2:C3:D4:E5",
     "api_key": "jiMMHN2kMSzpSi3n3bh4dmkNfgw5Z2",
     "firmware_profile": true,
-    "firmware_update": true,
+    "firmware_update": false,
+    "firmware_reset": false,
     "firmware_version": "1.8.6",
     "wifi_band": 2.4,
     "wifi_signal": -64,
@@ -503,8 +502,10 @@ You can change a single attribute or multiple attributes at once. All attributes
     "wake_duration": 5591,
     "width": 800,
     "height": 480,
+    "panel_revision": "abcdef12",
     "display_compatibility": false,
     "display_profile": "default",
+    "command": "none",
     "touch_bar": "tap",
     "sleep_start_at": "18:00:00",
     "sleep_stop_at": "06:00:00",
@@ -542,7 +543,8 @@ curl -X "DELETE" "https://localhost:2443/api/devices/1" \
     "mac_address": "02:A1:B2:C3:D4:E5",
     "api_key": "jiMMHN2kMSzpSi3n3bh4dmkNfgw5Z2",
     "firmware_profile": true,
-    "firmware_update": true,
+    "firmware_update": false,
+    "firmware_reset": false,
     "firmware_version": "1.8.6",
     "wifi_band": 2.4,
     "wifi_signal": -64,
@@ -556,8 +558,10 @@ curl -X "DELETE" "https://localhost:2443/api/devices/1" \
     "wake_duration": 5591,
     "width": 800,
     "height": 480,
+    "panel_revision": "abcdef12",
     "display_compatibility": false,
     "display_profile": "default",
+    "command": "none",
     "touch_bar": "tap",
     "sleep_start_at": "18:00:00",
     "sleep_stop_at": "06:00:00",
@@ -567,8 +571,508 @@ curl -X "DELETE" "https://localhost:2443/api/devices/1" \
   }
 }
 ----
+====
 
-You'll get an empty hash when there is nothing to delete.
+=== Extensions
+
+Allows you to manage your link:https://github.com/usetrmnl/terminus/blob/main/doc/extensions.adoc[Extensions].
+
+.GET Request
+[%collapsible]
+====
+[source,bash]
+----
+# Multiple
+curl "https://localhost:2443/api/extensions" \
+     -H 'Authorization: <redacted>' \
+     -H 'Content-Type: application/json'
+
+# Single.
+curl "https://localhost:2443/api/extensions/1" \
+     -H 'Authorization: <redacted>' \
+     -H 'Content-Type: application/json'
+----
+====
+
+.GET Response
+[%collapsible]
+====
+[source,json]
+----
+# Multiple.
+{
+  "data": [
+    {
+      "data": {
+        "id": 1,
+        "label": "Demo",
+        "name": "demo",
+        "description": null,
+        "kind": "poll",
+        "mode": "text",
+        "tags": [
+          "demo"
+        ],
+        "static_body": null,
+        "fields": null,
+        "template": "<h1>{{source_1.label}}</h1>",
+        "data": null,
+        "interval": 1,
+        "unit": "none",
+        "days": [],
+        "last_day_of_month": false,
+        "start_at": "2026-09-14T06:00:00-06:00",
+        "created_at": "2026-09-15T16:03:35-06:00",
+        "updated_at": "2026-09-15T16:25:12-06:00",
+        "model_ids": [
+          11
+        ],
+        "device_ids": [
+          14
+        ]
+      }
+    }
+  ]
+}
+
+# Single.
+{
+  "data": {
+    "id": 1,
+    "label": "Demo",
+    "name": "demo",
+    "description": null,
+    "kind": "poll",
+    "mode": "text",
+    "tags": [
+      "demo"
+    ],
+    "static_body": null,
+    "fields": null,
+    "template": "<h1>{{source_1.label}}</h1>",
+    "data": null,
+    "interval": 1,
+    "unit": "none",
+    "days": [],
+    "last_day_of_month": false,
+    "start_at": "2026-09-14T06:00:00-06:00",
+    "created_at": "2026-09-15T16:03:35-06:00",
+    "updated_at": "2026-09-15T16:25:12-06:00",
+    "model_ids": [
+      11
+    ],
+    "device_ids": [
+      14
+    ]
+  }
+}
+----
+
+You'll get an empty array when no devices exist.
+====
+
+.POST Request
+[%collapsible]
+====
+[source,bash]
+----
+# Minimum
+curl -X "POST" "https://localhost:2443/api/extensions" \
+     -H 'Authorization: <redacted>' \
+     -H 'Content-Type: application/json' \
+     -d $'{
+  "extension": {
+    "label": "Demo",
+    "name": "demo"
+  }
+}'
+----
+
+[source,bash]
+----
+# Maximum (all possible fields)
+curl -X "POST" "https://localhost:2443/api/extensions" \
+     -H 'Authorization: <redacted>' \
+     -H 'Content-Type: application/json' \
+     -d $'{
+  "device_ids": [
+    14
+  ],
+  "extension": {
+    "description": "A demo.",
+    "unit": "week",
+    "label": "Demo",
+    "template": "<h1>{{source_1.label}}</h1>",
+    "interval": 1,
+    "static_body": {
+      "label": "Demo"
+    },
+    "tags": [
+      "demo"
+    ],
+    "fields": [
+      {
+        "field_type": "author_bio",
+        "desription": "A demonstration.",
+        "keyname": "bio",
+        "name": "Demo",
+        "category": "demo"
+      }
+    ],
+    "start_at": "2026-09-01T00:00:00",
+    "mode": "text",
+    "data": {
+      "label": "Demo"
+    },
+    "days": [
+      "monday",
+      "friday"
+    ],
+    "last_day_of_month": true,
+    "kind": "static",
+    "name": "demo"
+  },
+  "model_ids": [
+    11
+  ]
+}'
+----
+====
+
+.POST Response
+[%collapsible]
+====
+[source,json]
+----
+{
+  "data": {
+    "id": 1,
+    "label": "Demo",
+    "name": "demo",
+    "description": "A demo.",
+    "kind": "static",
+    "mode": "text",
+    "tags": [
+      "demo"
+    ],
+    "static_body": {
+      "label": "Demo"
+    },
+    "fields": [
+      {
+        "name": "Demo",
+        "keyname": "bio",
+        "category": "demo",
+        "desription": "A demonstration.",
+        "field_type": "author_bio"
+      }
+    ],
+    "template": "<h1>{{source_1.label}}</h1>",
+    "data": {
+      "label": "Demo"
+    },
+    "interval": 1,
+    "unit": "week",
+    "days": [
+      "monday",
+      "friday"
+    ],
+    "last_day_of_month": true,
+    "start_at": "2026-08-31T18:00:00-06:00",
+    "created_at": "2026-09-15T16:39:12-06:00",
+    "updated_at": "2026-09-15T16:39:12-06:00",
+    "model_ids": [
+      11
+    ],
+    "device_ids": [
+      14
+    ]
+  }
+}
+----
+====
+
+.PATCH Request
+[%collapsible]
+====
+[source,bash]
+----
+curl -X "PATCH" "https://localhost:2443/api/extensions/1" \
+     -H 'Authorization: <redacted>' \
+     -H 'Content-Type: application/json' \
+     -d $'{
+  "extension": {
+    "label": "Demo Update"
+  }
+}'
+----
+
+You can change a single attribute or multiple attributes at once. All attributes found in the POST request are supported.
+====
+
+.PATCH Response
+[%collapsible]
+====
+[source,json]
+----
+{
+  "data": {
+    "id": 1,
+    "label": "Demo Update",
+    "name": "demo",
+    "description": null,
+    "kind": "poll",
+    "mode": "text",
+    "tags": [],
+    "static_body": {},
+    "fields": {},
+    "template": null,
+    "data": {},
+    "interval": 1,
+    "unit": "none",
+    "days": [],
+    "last_day_of_month": false,
+    "start_at": "2026-09-14T18:00:00-06:00",
+    "created_at": "2026-09-15T16:43:03-06:00",
+    "updated_at": "2026-09-15T16:43:10-06:00",
+    "model_ids": [],
+    "device_ids": []
+  }
+}
+----
+====
+
+.DELETE Request
+[%collapsible]
+====
+[source,bash]
+----
+curl -X "DELETE" "https://localhost:2443/api/extensions/1" \
+     -H 'Authorization: <redacted>' \
+     -H 'Content-Type: application/json'
+----
+====
+
+.DELETE Response
+[%collapsible]
+====
+[source,json]
+----
+{
+  "data": {
+    "id": 54,
+    "label": "Demo",
+    "name": "demo",
+    "description": null,
+    "kind": "poll",
+    "mode": "text",
+    "tags": [],
+    "static_body": {},
+    "fields": {},
+    "template": null,
+    "data": {},
+    "interval": 1,
+    "unit": "none",
+    "days": [],
+    "last_day_of_month": false,
+    "start_at": "2026-09-14T18:00:00-06:00",
+    "created_at": "2026-09-15T16:43:03-06:00",
+    "updated_at": "2026-09-15T16:43:31-06:00",
+    "model_ids": [],
+    "device_ids": []
+  }
+}
+----
+====
+
+=== Extension Exchanges
+
+Allows you to manage the exchanges of each link:https://github.com/usetrmnl/terminus/blob/main/doc/extensions.adoc[Extension]. These are what allow you to obtain data from multiple sources.
+
+💡 When using POST or PATCH, there will be a slight delay in updating of associated `data` or `errors`. This is due to background jobs being enqueued which might take a few seconds to process. Use GET to acquire updated responses if desired.
+
+.GET Request
+[%collapsible]
+====
+[source,bash]
+----
+# Multiple.
+curl "https://localhost:2443/api/extensions/1/exchanges" \
+     -H 'Authorization: <redacted>' \
+     -H 'Content-Type: application/json'
+
+# Single.
+curl "https://localhost:2443/api/extensions/1/exchanges/1" \
+     -H 'Authorization: <redacted>' \
+     -H 'Content-Type: application/json'
+----
+====
+
+.GET Response
+[%collapsible]
+====
+[source,json]
+----
+# Multiple.
+{
+  "data": [
+    {
+      "id": 1,
+      "headers": {},
+      "verb": "get",
+      "template": "https://demo.io",
+      "data": {},
+      "errors": {},
+      "refreshed_at": "2026-09-15T16:03:35-06:00",
+      "created_at": "2026-09-15T16:03:35-06:00",
+      "updated_at": "2026-09-15T16:03:35-06:00"
+    }
+  ]
+}
+
+# Single.
+{
+  "data": {
+    "id": 1,
+    "headers": {},
+    "verb": "get",
+    "template": "https://demo.io",
+    "data": {},
+    "errors": {},
+    "refreshed_at": "2026-09-15T16:03:35-06:00",
+    "created_at": "2026-09-15T16:03:35-06:00",
+    "updated_at": "2026-09-15T16:03:35-06:00"
+  }
+}
+----
+
+You'll get an empty array when no devices exist.
+====
+
+.POST Request
+[%collapsible]
+====
+[source,bash]
+----
+# Minimum
+curl -X "POST" "https://localhost:2443/api/extensions/1/exchanges" \
+     -H 'Authorization: <redacted>' \
+     -H 'Content-Type: application/json' \
+     -d $'{
+  "exchange": {
+    "template": "https://demo.io"
+  }
+}'
+
+# Maximum
+curl -X "POST" "https://localhost:2443/api/extensions/1/exchanges" \
+     -H 'Authorization: <redacted>' \
+     -H 'Content-Type: application/json' \
+     -d $'{
+  "exchange": {
+    "body": {
+      "name": "demo"
+    },
+    "headers": {
+      "content-type": "application/json"
+    },
+    "verb": "post",
+    "template": "https://demo.io"
+  }
+}'
+----
+====
+
+.POST Response
+[%collapsible]
+====
+[source,json]
+----
+{
+  "data": {
+    "id": 1,
+    "headers": {},
+    "verb": "get",
+    "template": "https://demo.io",
+    "data": {},
+    "errors": {},
+    "refreshed_at": nil,
+    "created_at": "2026-09-15T16:03:35-06:00",
+    "updated_at": "2026-09-15T16:03:35-06:00"
+  }
+}
+----
+====
+
+.PATCH Request
+[%collapsible]
+====
+[source,bash]
+----
+curl -X "PATCH" "https://localhost:2443/api/extensions/1/exchanges/1" \
+     -H 'Authorization: <redacted>' \
+     -H 'Content-Type: application/json' \
+     -d $'{
+  "extension": {
+    "template": "https://demo.io"
+  }
+}'
+----
+
+You can change a single attribute or multiple attributes at once. All attributes found in the POST request are supported.
+====
+
+.PATCH Response
+[%collapsible]
+====
+[source,json]
+----
+{
+  "data": {
+    "id": 1,
+    "headers": {},
+    "verb": "get",
+    "template": "https://demo.io",
+    "data": {},
+    "errors": {},
+    "refreshed_at": nil,
+    "created_at": "2026-09-15T16:03:35-06:00",
+    "updated_at": "2026-09-15T16:03:35-06:00"
+  }
+}
+----
+====
+
+.DELETE Request
+[%collapsible]
+====
+[source,bash]
+----
+curl -X "DELETE" "https://localhost:2443/api/extensions/1/exchanges/1" \
+     -H 'Authorization: <redacted>' \
+     -H 'Content-Type: application/json'
+----
+====
+
+.DELETE Response
+[%collapsible]
+====
+[source,json]
+----
+{
+  "data": {
+    "id": 1,
+    "headers": {},
+    "verb": "get",
+    "template": "https://demo.io",
+    "data": {},
+    "errors": {},
+    "refreshed_at": nil,
+    "created_at": "2026-09-15T16:03:35-06:00",
+    "updated_at": "2026-09-15T16:03:35-06:00"
+  }
+}
+----
 ====
 
 === Firmware
@@ -580,12 +1084,12 @@ Manages firmware records for keeping devices up-to-date. By default, firmware is
 ====
 [source,bash]
 ----
-# All records.
+# Multiple.
 curl "https://localhost:2443/api/firmware" \
      -H 'Authorization: <redacted>' \
      -H 'Content-Type: application/json'
 
-# Single record.
+# Single.
 curl "https://localhost:2443/api/firmware/1" \
      -H 'Authorization: <redacted>' \
      -H 'Content-Type: application/json'
@@ -597,32 +1101,36 @@ curl "https://localhost:2443/api/firmware/1" \
 ====
 [source,json]
 ----
-# All records.
+# Multiple.
 {
   "data": [
     {
       "id": 1,
       "version": "1.7.2",
-      "kind": "trmnl",
       "file_name": "1.7.2.bin",
       "mime_type": "application/octet-stream",
       "size": 1306608,
       "uri": "/uploads/60a5253edd0ab53cc31619a836c6cdb8.bin",
+      "model_ids": [
+        1
+      ],
       "created_at": "2026-01-08T21:26:34+00:00",
       "updated_at": "2026-01-08T21:26:34+00:00"
     }
   ]
 }
 
-# Single record.
+# Single.
 {
   "data": {
     "id": 1,
     "version": "1.7.2",
-    "kind": "trmnl",
     "file_name": "1.7.2.bin",
     "mime_type": "application/octet-stream",
     "size": 1306608,
+    "model_ids": [
+      1
+    ],
     "uri": "/uploads/60a5253edd0ab53cc31619a836c6cdb8.bin",
     "created_at": "2026-01-08T21:26:34+00:00",
     "updated_at": "2026-01-08T21:26:34+00:00"
@@ -644,8 +1152,10 @@ curl -X "POST" "https://localhost:2443/api/firmware" \
      -d $'{
   "firmware": {
     "version": "2.0.0",
-    "kind": "terminus",
-    "uri": "https://demo.terminus.io/2.0.0.bin"
+    "uri": "https://demo.terminus.io/2.0.0.bin",
+    "model_ids": [
+      1
+    ]
   }
 }'
 ----
@@ -660,10 +1170,12 @@ curl -X "POST" "https://localhost:2443/api/firmware" \
   "data": {
     "id": 10,
     "version": "2.0.0",
-    "kind": "terminus",
     "file_name": "2.0.0.bin",
     "mime_type": "application/octet-stream",
     "size": 1225536,
+    "model_ids": [
+      1
+    ],
     "uri": "/uploads/0c2f5a1acb23d20e9f72828254c4f258.bin",
     "created_at": "2026-01-12T22:32:08+00:00",
     "updated_at": "2026-01-12T22:32:09+00:00"
@@ -687,7 +1199,7 @@ curl -X "PATCH" "https://localhost:2443/api/firmware/10" \
 }'
 ----
 
-You can change a single attribute or multiple attributes at once.
+You can change a single attribute or multiple attributes at once. All attributes supported in the POST request is supported via PATCH too.
 ====
 
 .PATCH Response
@@ -699,10 +1211,12 @@ You can change a single attribute or multiple attributes at once.
   "data": {
     "id": 10,
     "version": "2.0.0",
-    "kind": "terminus",
     "file_name": "2.0.0.bin",
     "mime_type": "application/octet-stream",
     "size": 1225536,
+    "model_ids": [
+      1
+    ],
     "uri": "/uploads/31c6151dfa9362053022a9bfcab5b2b5.bin",
     "created_at": "2026-01-12T22:32:08+00:00",
     "updated_at": "2026-01-12T22:32:42+00:00"
@@ -732,18 +1246,17 @@ curl -X "DELETE" "https://localhost:2443/api/firmware/10" \
   "data": {
     "id": 10,
     "version": "2.0.0",
-    "kind": "terminus",
     "file_name": "2.0.0.bin",
     "mime_type": "application/octet-stream",
     "size": 1225536,
     "uri": "/uploads/31c6151dfa9362053022a9bfcab5b2b5.bin",
+    "model_ids": [
+    ],
     "created_at": "2026-01-12T22:32:08+00:00",
     "updated_at": "2026-01-12T22:32:42+00:00"
   }
 }
 ----
-
-You'll get an empty hash when there is nothing to delete.
 ====
 
 === Models
@@ -761,12 +1274,12 @@ The following provides details on all requests and responses.
 ====
 [source,bash]
 ----
-# All models.
+# Multiple.
 curl "https://localhost:2443/api/models" \
      -H 'Authorization: <redacted>' \
      -H 'Content-Type: application/json'
 
-# Single model.
+# Single.
 curl "https://localhost:2443/api/models/1" \
      -H 'Authorization: <redacted>' \
      -H 'Content-Type: application/json'
@@ -778,7 +1291,7 @@ curl "https://localhost:2443/api/models/1" \
 ====
 [source,json]
 ----
-# All models.
+# Multiple.
 {
   "data": [
     {
@@ -836,7 +1349,7 @@ curl "https://localhost:2443/api/models/1" \
   ]
 }
 
-# Single model.
+# Single.
 "data": {
   "default_palette_id": 1,
   "id": 1,
@@ -1055,8 +1568,6 @@ curl -X "DELETE" "https://localhost:2443/api/models/2" \
   }
 }
 ----
-
-You'll get an empty hash when there is nothing to delete.
 ====
 
 === Playlists
@@ -1068,12 +1579,12 @@ Provides playlist information. The following provides details on all requests an
 ====
 [source,bash]
 ----
-# All playlists
+# Multiple.
 curl "https://localhost:2443/api/playlists" \
      -H 'Authorization: <redacted>' \
      -H 'Content-Type: application/json'
 
-# Single playlist.
+# Single.
 curl "https://localhost:2443/api/playlists/1" \
      -H 'Authorization: <redacted>' \
      -H 'Content-Type: application/json'
@@ -1085,7 +1596,7 @@ curl "https://localhost:2443/api/playlists/1" \
 ====
 [source,json]
 ----
-# All playlists.
+# Multiple.
 {
   "data": [
     {
@@ -1116,7 +1627,7 @@ curl "https://localhost:2443/api/playlists/1" \
   ]
 }
 
-# Single playlist.
+# Single.
 {
   "data": {
     "id": 1,
@@ -1317,8 +1828,6 @@ curl -X "DELETE" "https://localhost:2443/api/playlists/2" \
   }
 }
 ----
-
-You'll get an empty hash when there is nothing to delete.
 ====
 
 === Screens
@@ -1335,7 +1844,13 @@ Used for managing device screens by supplying content for rendering, screenshott
 ====
 [source,bash]
 ----
+# Multiple.
 curl "https://localhost:2443/api/screens" \
+     -H 'Authorization: <redacted>' \
+     -H 'Content-Type: application/json'
+
+# Single.
+curl "https://localhost:2443/api/screens/1" \
      -H 'Authorization: <redacted>' \
      -H 'Content-Type: application/json'
 ----
@@ -1346,6 +1861,7 @@ curl "https://localhost:2443/api/screens" \
 ====
 [source,json]
 ----
+# Multiple.
 {
   "data": [
     {
@@ -1364,6 +1880,25 @@ curl "https://localhost:2443/api/screens" \
       "uri": "/uploads/9fb384c1aa9043ccfee781ab21d99aa0.bmp"
     }
   ]
+}
+
+# Single.
+{
+  "data": {
+    "id": 3,
+    "model_id": 1,
+    "label": "Moon",
+    "name": "plugin-6e6740",
+    "created_at": "2025-07-29T16:29:02+00:00",
+    "updated_at": "2025-07-29T16:29:02+00:00",
+    "filename": "plugin-6e6740.bmp",
+    "mime_type": "image/bmp",
+    "bit_depth": 1,
+    "width": 800,
+    "height": 480,
+    "size": 48062,
+    "uri": "/uploads/9fb384c1aa9043ccfee781ab21d99aa0.bmp"
+  }
 }
 ----
 ====

@@ -8,7 +8,7 @@ RSpec.describe Terminus::Actions::Firmware::Index, :db do
   include_context "with application dependencies"
 
   describe "#call" do
-    let(:firmware) { Factory[:firmware, :with_attachment] }
+    let(:firmware) { Factory[:firmware, :with_model, :with_attachment] }
     let(:proof) { %r(download="test.bin".+href="memory://abc123.bin") }
 
     before { firmware }
@@ -16,7 +16,7 @@ RSpec.describe Terminus::Actions::Firmware::Index, :db do
     it "renders default response with search results" do
       action.call Rack::MockRequest.env_for(
         "0.0",
-        "HTTP_HX_TRIGGER" => "search",
+        "HTTP_HX_SOURCE" => "input#search",
         "router.params" => {query: "0.0"}
       )
 
@@ -36,7 +36,7 @@ RSpec.describe Terminus::Actions::Firmware::Index, :db do
     it "renders htmx response with search results" do
       response = action.call Rack::MockRequest.env_for(
         "0.0",
-        "HTTP_HX_TRIGGER" => "search",
+        "HTTP_HX_SOURCE" => "input#search",
         "router.params" => {query: "0.0"}
       )
 
@@ -46,7 +46,7 @@ RSpec.describe Terminus::Actions::Firmware::Index, :db do
     it "renders htmx response with no results" do
       response = action.call Rack::MockRequest.env_for(
         "bogus",
-        "HTTP_HX_TRIGGER" => "search",
+        "HTTP_HX_SOURCE" => "input#search",
         "router.params" => {query: "bogus"}
       )
 

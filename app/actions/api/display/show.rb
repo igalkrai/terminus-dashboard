@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "core"
 require "trmnl/api"
 
 module Terminus
@@ -12,9 +13,9 @@ module Terminus
           include Deps[
             :settings,
             "aspects.devices.synchronizer",
-            "aspects.screens.rotator",
-            "aspects.screens.gaffer",
-            firmware_repository: "repositories.firmware"
+            "aspects.screens.interrupter",
+            "aspects.screens.interrupts.error",
+            firmware_finder: "aspects.firmware.finder"
           ]
 
           include Initable[model: TRMNL::API::Models::Display]
@@ -22,8 +23,10 @@ module Terminus
           using Refines::Actions::Response
 
           def handle request, response
-            case synchronizer.call request.env
-              in Success(device) then rotate device, response
+            environment = request.env
+
+            case synchronizer.call environment
+              in Success(device) then interrupt device, environment["HTTP_UPDATE_SOURCE"], response
               else not_found response
             end
           end
@@ -34,15 +37,15 @@ module Terminus
 
           private
 
-          def rotate device, response
-            rotator.call(device)
-                   .either -> screen { success device, screen, response },
-                           -> message { error_for device, message, response }
+          def interrupt device, event, response
+            interrupter.call(device, event:)
+                       .either -> screen { success device, screen, response },
+                               -> message { error_for device, message, response }
           end
 
           def success device, screen, response
             attributes = {
-              filename: screen.image_name_with_checksum,
+              filename: screen.image_name_with_timestamp,
               image_url: screen.image_uri(host: settings.api_uri)
             }
 
@@ -50,25 +53,24 @@ module Terminus
           end
 
           def error_for device, message, response
-            gaffer.call(device, message).bind { |screen| any_error device, screen, response }
+            error.call(device, message).bind { |screen| any_error device, screen, response }
           end
 
           def build_payload device, attributes
-            model[**fetch_firmware(device), **attributes, **device.display_attributes]
+            model[**add_firmware(device), **attributes, **device.display_attributes]
           end
 
-          def fetch_firmware device
-            firmware_repository.latest.then do |firmware|
-              break unless firmware
+          # :reek:FeatureEnvy
+          def add_firmware device
+            case firmware_finder.call model_id: device.model_id
+              in Success(firmware)
+                update = device.firmware_update && (device.firmware_version != firmware.version)
 
-              version = firmware.version
-
-              break if device.firmware_version == version
-
-              {
-                firmware_url: firmware.attachment_uri(host: settings.api_uri),
-                firmware_version: version
-              }
+                {
+                  firmware_url: firmware.attachment_uri(host: settings.api_uri),
+                  update_firmware: update
+                }
+              else Core::EMPTY_HASH
             end
           end
 
@@ -76,7 +78,7 @@ module Terminus
             payload = model[
               filename: screen.image_name,
               image_url: screen.image_uri(host: settings.api_uri),
-              **fetch_firmware(device),
+              **add_firmware(device),
               **device.display_attributes
             ]
 
@@ -84,14 +86,12 @@ module Terminus
           end
 
           def not_found response
-            payload = petail[
+            response.with_details problem[
               type: "/problem_details#api_key",
               status: __method__,
-              detail: "Invalid API key.",
+              detail: translate(".invalid_api_key"),
               instance: "/api/display"
             ]
-
-            response.with body: payload.to_json, format: :problem_details, status: payload.status
           end
         end
       end

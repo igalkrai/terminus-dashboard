@@ -19,12 +19,14 @@
     "codemirror": "^6.0.2",
     "esbuild": "^0.28.1",
     "hanami-assets": "^3.0.0",
-    "htmx-ext-sse": "^2.2.4",
-    "htmx-remove": "^3.6.0",
-    "htmx-slide": "^0.5.0",
-    "htmx.org": "^2.0.8"
+    "htmx-remove": "^4.1.0",
+    "htmx-slide": "^0.8.0",
+    "htmx.org": "^4.0.0"
+  },
+  "overrides": {
+    "glob": "^14.0.2"
   },
   "allowScripts": {
-    "esbuild@0.28.1": true
+    "esbuild@0.28.2": true
   }
 }

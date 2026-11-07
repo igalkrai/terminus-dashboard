@@ -1,18 +1,26 @@
 # frozen_string_literal: true
 
 require "hanami/view"
+require "refinements/string"
 
 module Terminus
   module Views
     module Parts
       # The firmware presenter.
       class Firmware < Hanami::View::Part
-        def kind_label
-          case kind
-            when "trmnl" then kind.upcase
-            else kind.capitalize
-          end
+        include Deps[:routes]
+
+        using Refinements::String
+
+        def first_model_link
+          model = models.first
+
+          return "Missing Model" unless model
+
+          model.then { helpers.link_to it.label, routes.path(:model, id: it.id) }
         end
+
+        def total_models = models.size.then { %(#{it} #{"model".pluralize "s", it}) }
       end
     end
   end

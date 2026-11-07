@@ -6,13 +6,19 @@
   </header>
 
   <p class="introduction">
-    Welcome to the problem details page where you can find additional information related <a href="https://www.rfc-editor.org/rfc/rfc9457">Problem Details for HTTP APIs</a> as implemented by the <a href="https://alchemists.io/projects/petail">Petails</a> gem. The following documents the different types of problems as linked to in your API response errors.
+    Welcome to the problem details page where you can find additional information related <a href="https://www.rfc-editor.org/rfc/rfc9457">Problem Details for HTTP APIs</a> as implemented by the <a href="https://alchemists.io/projects/rfc-api-problem">RFC API Problem</a> gem. The following documents the different types of problems as linked to in your API responses.
   </p>
 
   <details name="details">
     <summary id="api_key" class="summary">API Key</summary>
 
     <p>Could not find device by API key. The API key should be supplied via the HTTP <code>ACCESS_TOKEN</code> header.</p>
+  </details>
+
+  <details name="details">
+    <summary id="device_id" class="summary">Device ID</summary>
+
+    <p>Could not find device by MAC address. The MAC address should be supplied via the HTTP <code>ID</code> header.</p>
   </details>
 
   <details name="details">
@@ -104,6 +110,21 @@
   </details>
 
   <details name="details">
+    <summary id="extension_exchange" class="summary">Extension Exchange</summary>
+
+    <p>Could not create or update an extension exchange. The following is the list of supported keys:</p>
+
+    <h2 class="label">Required</h2>
+
+    <dl class="bit-definition-list">
+      <dt class="key">template</dt>
+      <dd class="value">A URI or list of URLs to obtain data from. Can use Liquid syntax.</dd>
+    </dl>
+
+    <p>When making a POST request the above is required but when making a PATCH request they are optional as long you supply at least one key.</p>
+  </details>
+
+  <details name="details">
     <summary id="firmware_payload" class="summary">Firmware Payload</summary>
 
     <p>Could not create or update firmware. The following is the list of supported keys:</p>
@@ -113,9 +134,6 @@
     <dl class="bit-definition-list">
       <dt class="key">version</dt>
       <dd class="value">The unique version.</dd>
-
-      <dt class="key">kind</dt>
-      <dd class="value">The unique kind. Use <code>terminus</code> as the value.</dd>
 
       <dt class="key">uri</dt>
       <dd class="value">The remote URI to upload firmware.</dd>
@@ -134,6 +152,12 @@
     <summary id="invalid_foreign_key" class="summary">Invalid Foreign Key</summary>
 
     <p>Could not create or update record due to invalid foreign key. This happens when supplying a foreign key ID that no longer exists. To correct, use a foreign that does exist.</p>
+  </details>
+
+  <details name="details">
+    <summary id="invalid_numeric" class="summary">Invalid Numeric</summary>
+
+    <p>Could not create or update record due to the numeric value being out range. To correct, use a smaller number.</p>
   </details>
 
   <details name="details">

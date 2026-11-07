@@ -39,7 +39,7 @@ module Terminus
 
           def handle request, response
             parameters = request.params
-            device = device_repository.find_by mac_address: request.get_header("HTTP_ID")
+            device = device_repository.find_by api_key: request.get_header("HTTP_ACCESS_TOKEN")
 
             return not_found response unless device
             return unprocessable_content parameters, response unless parameters.valid?
@@ -62,30 +62,28 @@ module Terminus
           end
 
           def not_found response
-            payload = petail[
+            logger.error translate(".no_device")
+
+            response.with_details problem[
               type: "/problem_details#device_id",
               status: __method__,
-              detail: "Invalid device ID.",
+              detail: translate(".invalid_device_id"),
               instance: "/api/log"
             ]
-
-            logger.error "Unable to find device."
-            response.with body: payload.to_json, format: :problem_details, status: payload.status
           end
 
           def unprocessable_content parameters, response
             errors = parameters.errors.to_h
 
-            payload = petail[
+            logger.error errors
+
+            response.with_details problem[
               type: "/problem_details#log_payload",
               status: __method__,
-              detail: "Validation failed due to incorrect or invalid payload.",
+              detail: translate(".invalid_payload"),
               instance: "/api/log",
               extensions: {errors:}
             ]
-
-            logger.error errors
-            response.with body: payload.to_json, format: :problem_details, status: payload.status
           end
         end
       end

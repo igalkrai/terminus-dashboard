@@ -1,33 +1,62 @@
 inherit_gem:
   caliber: config/all.yml
 
-plugins: rubocop-sequel
+plugins:
+  - rubocop-i18n
+  - rubocop-sequel
 
+I18n/GetText:
+  Enabled: false
+I18n/RailsI18n:
+  Enabled: true
+I18n/RailsI18n/DecorateString:
+  Exclude:
+    - app/aspects/firmware/models/setup.rb
+    - bin/**/*
+    - Rakefile
+    - scripts/**/*
+    - slices/authentication/middleware.rb
+    - spec/**/*
+I18n/RailsI18n/DecorateStringFormattingUsingInterpolation:
+  Exclude:
+    - app/views/parts/device.rb
 Metrics/AbcSize:
   Exclude:
     - app/aspects/extensions/importers/remote/transformer.rb
     - app/aspects/screens/converters/color.rb
     - app/aspects/screens/converters/monochrome.rb
-    - app/aspects/screens/shoter.rb
+    - lib/terminus/refines/icalendar/calendar.rb
+    - lib/terminus/refines/icalendar/event.rb
 Metrics/BlockLength:
   Exclude:
+    - app/aspects/screens/converters/color.rb
     - config/db/migrate/*
     - slices/authentication/feature.rb
     - slices/authentication/middleware.rb
+Metrics/ClassLength:
+  Exclude:
+    - slices/authentication/middleware.rb
 Metrics/CollectionLiteralLength:
   Exclude:
+    - app/aspects/firmware/headers/model.rb
     - app/serializers/device.rb
+    - lib/terminus/refines/icalendar/event.rb
+    - spec/app/aspects/firmware/headers/model_spec.rb
+    - spec/app/aspects/firmware/headers/parser_spec.rb
     - spec/app/contracts/devices/patch_spec.rb
     - spec/app/schemas/devices/upsert_spec.rb
+    - spec/app/schemas/firmware/header_spec.rb
     - spec/app/serializers/device_spec.rb
+    - spec/lib/terminus/refines/icalendar/event_spec.rb
     - spec/requests/devices_spec.rb
+    - spec/support/shared_contexts/firmware_headers.rb
 Metrics/CyclomaticComplexity:
   AllowedMethods:
-    - battery_voltage_to_percent
     - wifi_percentage
+  Exclude:
+    - lib/terminus/refines/icalendar/event.rb
 Metrics/MethodLength:
   AllowedMethods:
-    - battery_voltage_to_percent
     - cloneable_attributes
     - device_attributes
     - export_attributes
@@ -35,16 +64,23 @@ Metrics/MethodLength:
   Exclude:
     - app/aspects/screens/converters/color.rb
     - app/aspects/screens/converters/monochrome.rb
-    - app/aspects/screens/shoter.rb
     - app/views/helpers.rb
     - config/initializers/universal_logger_patch.rb
+    - lib/terminus/chromium.rb
+    - lib/terminus/refines/icalendar/calendar.rb
+    - lib/terminus/refines/icalendar/event.rb
 Metrics/ParameterLists:
   Exclude:
-    - app/aspects/extensions/fetchers/request.rb
-    - app/aspects/screens/placeholder.rb
+    - app/aspects/extensions/fetcher/request.rb
+    - app/aspects/screens/faux.rb
+Metrics/PerceivedComplexity:
+  Exclude:
+    - lib/terminus/refines/icalendar/event.rb
 Naming/VariableNumber:
   AllowedPatterns:
     - md5
+  Exclude:
+    - lib/terminus/refines/icalendar/event.rb
 RSpec/ExampleLength:
   Exclude:
     - "spec/features/**/*"
@@ -53,4 +89,14 @@ RSpec/SpecFilePathFormat:
     Terminus: ""
 Style/IpAddresses:
   Exclude:
+    - spec/**/*
+Style/MissingElse:
+  Exclude:
+    - app/aspects/screens/converters/color.rb
+Style/SymbolProc:
+  Exclude:
+    - lib/terminus/refines/icalendar/calendar.rb
+ThreadSafety/EnvMutation:
+  Exclude:
+    - scripts/docker/entrypoint
     - spec/**/*

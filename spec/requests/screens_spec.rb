@@ -3,8 +3,6 @@
 require "hanami_helper"
 
 RSpec.describe "/api/screens", :db do
-  using Refinements::Pathname
-
   include_context "with JWT"
 
   let(:palette) { Factory[:palette] }
@@ -49,6 +47,40 @@ RSpec.describe "/api/screens", :db do
     expect(json_payload).to eq(data: [])
   end
 
+  it "answers existing screen" do
+    get routes.path(:api_screen, id: screen.id),
+        {},
+        "HTTP_AUTHORIZATION" => access_token,
+        "CONTENT_TYPE" => "application/json"
+
+    expect(json_payload).to match(
+      data: {
+        model_id: model.id,
+        id: screen.id,
+        label: screen.label,
+        name: screen.name,
+        filename: "test.png",
+        uri: "memory://abc123.png",
+        mime_type: "image/png",
+        bit_depth: 1,
+        size: kind_of(Integer),
+        width: 1,
+        height: 1,
+        created_at: match_rfc_3339,
+        updated_at: match_rfc_3339
+      }
+    )
+  end
+
+  it "answers not found error with invalid ID" do
+    get routes.path(:api_screen, id: 666),
+        {},
+        "HTTP_AUTHORIZATION" => access_token,
+        "CONTENT_TYPE" => "application/json"
+
+    expect(json_payload).to eq(RFC::API::Problem[status: :not_found].to_h)
+  end
+
   it "creates with playlist ID and mode" do
     playlist = Factory[:playlist]
 
@@ -73,7 +105,7 @@ RSpec.describe "/api/screens", :db do
         label: "Test",
         name: "test",
         filename: "test.png",
-        uri: %r(memory://\h{32}.png),
+        uri: match_shrine_uri(extension: :png),
         mime_type: "image/png",
         bit_depth: 1,
         size: kind_of(Integer),
@@ -98,7 +130,7 @@ RSpec.describe "/api/screens", :db do
         label: "Test",
         name: "test",
         filename: "test.png",
-        uri: %r(memory://\h{32}.png),
+        uri: match_shrine_uri(extension: :png),
         mime_type: "image/png",
         bit_depth: 1,
         size: kind_of(Integer),
@@ -195,7 +227,7 @@ RSpec.describe "/api/screens", :db do
     end
 
     it "answers problem details" do
-      problem = Petail[
+      problem = RFC::API::Problem[
         type: "/problem_details#screen_payload",
         status: 422,
         title: "Unprocessable Content",
@@ -216,7 +248,7 @@ RSpec.describe "/api/screens", :db do
     end
 
     it "answers problem details" do
-      problem = Petail[
+      problem = RFC::API::Problem[
         type: "/problem_details#screen_payload",
         status: 422,
         title: "Unprocessable Content",
@@ -244,7 +276,7 @@ RSpec.describe "/api/screens", :db do
     end
 
     it "answers problem details" do
-      problem = Petail[
+      problem = RFC::API::Problem[
         type: "/problem_details#screen_payload",
         status: :unprocessable_content,
         detail: "Validation failed.",
@@ -276,7 +308,7 @@ RSpec.describe "/api/screens", :db do
         label: screen.label,
         name: screen.name,
         filename: "#{screen.name}.png",
-        uri: %r(memory://\h{32}.png),
+        uri: match_shrine_uri(extension: :png),
         mime_type: "image/png",
         bit_depth: 1,
         size: kind_of(Integer),
@@ -301,7 +333,7 @@ RSpec.describe "/api/screens", :db do
         label: screen.label,
         name: screen.name,
         filename: "#{screen.name}.png",
-        uri: %r(memory://\h{32}.png),
+        uri: match_shrine_uri(extension: :png),
         mime_type: "image/png",
         bit_depth: 1,
         size: kind_of(Integer),
@@ -319,7 +351,7 @@ RSpec.describe "/api/screens", :db do
           "HTTP_AUTHORIZATION" => access_token,
           "CONTENT_TYPE" => "application/json"
 
-    problem = Petail[
+    problem = RFC::API::Problem[
       type: "/problem_details#screen_payload",
       status: 422,
       title: "Unprocessable Content",
@@ -336,7 +368,7 @@ RSpec.describe "/api/screens", :db do
           "HTTP_AUTHORIZATION" => access_token,
           "CONTENT_TYPE" => "application/json"
 
-    problem = Petail[
+    problem = RFC::API::Problem[
       type: "/problem_details#screen_payload",
       status: 422,
       title: "Unprocessable Content",
@@ -353,7 +385,7 @@ RSpec.describe "/api/screens", :db do
           "HTTP_AUTHORIZATION" => access_token,
           "CONTENT_TYPE" => "application/json"
 
-    problem = Petail[
+    problem = RFC::API::Problem[
       type: "/problem_details#screen_payload",
       status: 422,
       title: "Unprocessable Content",

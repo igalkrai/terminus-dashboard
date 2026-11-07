@@ -17,16 +17,17 @@ module Terminus
           params do
             required(:firmware).filled :hash do
               required(:version).filled Types::Version
-              required(:kind).filled :string
               required(:uri).filled :string
             end
+
+            required(:model_ids).filled(:array).each(:integer)
           end
 
           def handle request, response
             parameters = request.params
 
             if parameters.valid?
-              process parameters[:firmware], response
+              process parameters.to_h, response
             else
               unprocessable_content parameters, response
             end
@@ -34,9 +35,11 @@ module Terminus
 
           private
 
+          # :reek:TooManyStatements
           def process parameters, response
-            uri = parameters.delete :uri
-            record = repository.create parameters
+            attributes, model_ids = parameters.values_at :firmware, :model_ids
+            uri = attributes.delete :uri
+            record = repository.create_with_models attributes, model_ids
 
             downloader.call(uri)
                       .either -> http_response { upload record, http_response.body.to_s, response },
@@ -56,26 +59,22 @@ module Terminus
           end
 
           def unprocessable_download uri, response
-            payload = petail[
+            response.with_details problem[
               type: "/problem_details#firmware_payload",
               status: :unprocessable_content,
               detail: "Invalid URI: #{uri}.",
               instance: "/api/firmware"
             ]
-
-            response.with body: payload.to_json, format: :problem_details, status: payload.status
           end
 
           def unprocessable_content parameters, response
-            payload = petail[
+            response.with_details problem[
               type: "/problem_details#firmware_payload",
               status: :unprocessable_content,
-              detail: "Validation failed.",
+              detail: translate("api.shared.errors.validation"),
               instance: "/api/firmware",
               extensions: {errors: parameters.errors.to_h}
             ]
-
-            response.with body: payload.to_json, format: :problem_details, status: payload.status
           end
         end
       end

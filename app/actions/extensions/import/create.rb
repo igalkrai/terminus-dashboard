@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "dry/monads"
-
 module Terminus
   module Actions
     module Extensions
@@ -27,10 +25,8 @@ module Terminus
             flash = response.flash
 
             case creator.call temp_file
-              in Success then flash[:notice] = "Extension imported!"
+              in Success then flash[:notice] = translate ".notice"
               in Failure(message) then flash[:alert] = message
-              # :nocov:
-              # :nocov:
             end
 
             response.redirect_to routes.path(:extensions)

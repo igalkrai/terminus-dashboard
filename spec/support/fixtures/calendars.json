@@ -1,0 +1,70 @@
+[
+  {
+    "categories": [],
+    "color": "",
+    "description": [],
+    "events": [
+      {
+        "alarm": {
+          "action": "DISPLAY",
+          "attendees": [],
+          "trigger": {},
+          "description": "",
+          "summary": "",
+          "duration": {},
+          "repeat": 0,
+          "attachments": []
+        },
+        "attachments": [],
+        "attendees": [],
+        "categories": [],
+        "classification": "",
+        "color": "",
+        "comments": [],
+        "contacts": [],
+        "created_at": null,
+        "description": "",
+        "duration": {},
+        "end_at": null,
+        "exceptions": [],
+        "geocoordinates": [],
+        "images": [],
+        "location": "",
+        "name": "VEVENT",
+        "organizer": "",
+        "priority": 0,
+        "recurrence_id": null,
+        "recurrence_rule": [],
+        "recurrences": [],
+        "related_to": [],
+        "request_status": [],
+        "resources": [],
+        "sequence": 0,
+        "start_at": "2026-09-30T18:30:00+00:00",
+        "status": "",
+        "summary": "",
+        "synced_at": "2026-09-28T20:03:06+00:00",
+        "time_transparency": "",
+        "uid": "cc1fe76d-eb99-42cf-a73f-eb619b529341",
+        "updated_at": null,
+        "url": ""
+      }
+    ],
+    "images": [],
+    "ip_method": "",
+    "name": "VCALENDAR",
+    "product_identifier": "-//Test//Test//EN",
+    "refresh_interval": {},
+    "scale": "GREGORIAN",
+    "source": "",
+    "timezone": {
+      "id": "",
+      "url": "",
+      "updated_at": null
+    },
+    "uid": "",
+    "updated_at": null,
+    "url": "",
+    "version": "2.0"
+  }
+]

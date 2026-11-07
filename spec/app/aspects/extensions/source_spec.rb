@@ -5,6 +5,44 @@ require "hanami_helper"
 RSpec.describe Terminus::Aspects::Extensions::Source do
   subject(:parser) { described_class }
 
+  describe ".from_calendar" do
+    it "answers empty array when nil" do
+      expect(parser.from_calendar(nil)).to be_success([])
+    end
+
+    it "answers empty array when blank" do
+      expect(parser.from_calendar("")).to be_success([])
+    end
+
+    it "answers array" do
+      content = <<~CONTENT
+        BEGIN:VCALENDAR
+        PRODID:-//Test//Test//EN
+        VERSION:2.0
+        BEGIN:VEVENT
+        UID:cc1fe76d-eb99-42cf-a73f-eb619b529341
+        DTSTAMP:20260928T200306Z
+        DTSTART:20260930T183000Z
+        END:VEVENT
+        END:VCALENDAR
+      CONTENT
+
+      expect(parser.from_calendar(content)).to be_success(
+        JSON.parse(SPEC_ROOT.join("support/fixtures/calendars.json").read, symbolize_names: true)
+      )
+    end
+
+    it "answers failure with malformed content" do
+      content = <<~CONTENT
+        BEGIN:VCALENDAR
+        bogus
+        END:VCALENDAR
+      CONTENT
+
+      expect(parser.from_calendar(content)).to be_failure("Invalid iCalendar input line: bogus")
+    end
+  end
+
   describe ".from_csv" do
     it "answers empty array when nil" do
       expect(parser.from_csv(nil)).to be_success([])
@@ -19,28 +57,28 @@ RSpec.describe Terminus::Aspects::Extensions::Source do
     end
 
     it "answers array with valid headers and rows" do
-      body = <<~BODY
+      content = <<~BODY
         title,director
         Castle in the Sky,Hayao Miyazaki
       BODY
 
-      expect(parser.from_csv(body)).to be_success(
+      expect(parser.from_csv(content)).to be_success(
         [{"director" => "Hayao Miyazaki", "title" => "Castle in the Sky"}]
       )
     end
 
     it "answers failure with invalid encoding" do
-      body = "name,city\nJohn,New\xFFYork".dup.force_encoding "UTF-8"
-      expect(parser.from_csv(body)).to be_failure("Invalid byte sequence in UTF-8 in line 2.")
+      content = "name,city\nJohn,New\xFFYork".dup.force_encoding "UTF-8"
+      expect(parser.from_csv(content)).to be_failure("Invalid byte sequence in UTF-8 in line 2.")
     end
 
     it "answers failure with missing quote" do
-      body = <<~BODY
+      content = <<~BODY
         title,director
         "Castle in the Sky,Hayao Miyazaki
       BODY
 
-      expect(parser.from_csv(body)).to be_failure("Unclosed quoted field in line 2.")
+      expect(parser.from_csv(content)).to be_failure("Unclosed quoted field in line 2.")
     end
   end
 
@@ -62,18 +100,20 @@ RSpec.describe Terminus::Aspects::Extensions::Source do
     end
 
     it "answers hash when hash" do
-      body = {test: "example"}.to_json
-      expect(parser.from_json(body)).to be_success("test" => "example")
+      content = {test: "example"}.to_json
+      expect(parser.from_json(content)).to be_success("test" => "example")
     end
 
     it "answers array when array" do
-      body = [1, 2, 3].to_json
-      expect(parser.from_json(body)).to be_success([1, 2, 3])
+      content = [1, 2, 3].to_json
+      expect(parser.from_json(content)).to be_success([1, 2, 3])
     end
 
     it "answers failure with invalid encoding" do
-      body = "test\xFF".dup.force_encoding "UTF-8"
-      expect(parser.from_json(body)).to be_failure("Unexpected token 'test' at line 1 column 1.")
+      content = "test\xFF".dup.force_encoding "UTF-8"
+      expect(parser.from_json(content)).to be_failure(
+        "Unexpected token 'test\xFF' at line 1 column 1."
+      )
     end
   end
 
@@ -95,13 +135,13 @@ RSpec.describe Terminus::Aspects::Extensions::Source do
     end
 
     it "answers failure with invalid encoding" do
-      body = "test\xFF".dup.force_encoding "UTF-8"
-      expect(parser.from_text(body)).to be_failure("Invalid byte sequence in utf-8.")
+      content = "test\xFF".dup.force_encoding "UTF-8"
+      expect(parser.from_text(content)).to be_failure("Invalid byte sequence in UTF-8.")
     end
   end
 
   describe ".from_xml" do
-    let :body do
+    let :content do
       <<~CONTENT
         <catalog>
           <book>
@@ -122,8 +162,8 @@ RSpec.describe Terminus::Aspects::Extensions::Source do
       expect(parser.from_xml("")).to be_success([])
     end
 
-    it "answers hash with valid body" do
-      expect(parser.from_xml(body)).to be_success(
+    it "answers hash with valid content" do
+      expect(parser.from_xml(content)).to be_success(
         {
           "catalog" => {
             "book" => [
@@ -137,8 +177,8 @@ RSpec.describe Terminus::Aspects::Extensions::Source do
     end
 
     it "answers hash with encoded characters" do
-      body = "<catalog>B\xFFoks</catalog>".dup.force_encoding "UTF-8"
-      expect(parser.from_xml(body)).to be_success({"catalog" => "B�oks"})
+      content = "<catalog>B\xFFoks</catalog>".dup.force_encoding "UTF-8"
+      expect(parser.from_xml(content)).to be_success({"catalog" => "B�oks"})
     end
 
     it "answers failure when malformed" do

@@ -1,0 +1,12 @@
+<%= scope(:popover_default_content, name: :command, label: "Command").render do %>
+  <p>A command allows you to program the button on the back of your device. Once a command is selected, press the button on the back of your device to issue your command. The following commands are supported:</p>
+
+  <ul>
+    <li><strong>Identify</strong>: Renders screen with device information so you can quickly identify your device.</li>
+    <li><strong>Previous Screen</strong>: Moves to previous screen.</li>
+    <li><strong>Next Screen</strong>: Moves to next screen. This is the default command.</li>
+    <li><strong>First Screen</strong>: Moves to first screen in playlist.</li>
+    <li><strong>Last Screen</strong>: Moves to last screen in playlist.</li>
+    <li><strong>Screen Wipe</strong>: Forces your device to cycle between positive (white) and negative (black) particles to remove any ghosting on your device. Ghosting happens when there is a charge imbalance on your display. Your firmware profile will also be enabled, if not already, once the wipe completes. Automatically reverts back to the Next Screen command once used.</li>
+  </ul>
+<% end %>

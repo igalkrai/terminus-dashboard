@@ -2,7 +2,12 @@
   <h2 class="label"><%= template.label %></h2>
 
   <div class="actions">
+    <%= render "shared/actions/view", path: routes.path(:design, id: template.id) %>
     <%= render "shared/actions/edit", path: routes.path(:design_edit, id: template.id) %>
+
+    <%= render "shared/actions/download",
+               path: routes.path(:design_export, design_id: template.id),
+               name: "design-#{template.name}.zip" %>
 
     <%= render "shared/actions/delete",
                path: routes.path(:design, id: template.id),
@@ -10,5 +15,3 @@
                target: ".bit-page" %>
   </div>
 </li>
-
-

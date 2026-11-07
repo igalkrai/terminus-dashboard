@@ -14,9 +14,11 @@ module Terminus
         optional(:refresh_rate).filled :integer, gt?: 0
         optional(:image_cached).maybe :bool
         optional(:image_timeout).filled :integer, gteq?: 0
+        optional(:panel_revision).filled :string
         optional(:display_compatibility).filled :bool
         optional(:display_profile).filled :string
         optional(:firmware_update).filled :bool
+        optional(:firmware_reset).filled :bool
         optional(:firmware_profile).filled :bool
         optional(:firmware_version).filled Types::Version
         optional(:charging).maybe :bool
@@ -24,9 +26,8 @@ module Terminus
         optional(:battery_voltage).filled :float
         optional(:wifi_band).filled :float, gteq?: 0
         optional(:wifi_signal).filled :integer
-        optional(:width).filled :integer
-        optional(:height).filled :integer
         optional(:touch_bar).filled :string
+        optional(:command).filled :string
         optional(:wake_duration).maybe :integer
         optional(:wake_reason).filled :string
         optional(:sleep_start_at).maybe :string

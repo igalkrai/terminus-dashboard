@@ -5,9 +5,9 @@
 :core_link: link:https://trmnl.com[Core]
 :firmware_link: link:https://github.com/usetrmnl/trmnl-firmware[Firmware]
 :framework_link: link:https://trmnl.com/framework[Framework]
-:liquid_link: link:https://shopify.github.io/liquid/[Liquid]
+:liquid_link: link:https://shopify.github.io/liquid[Liquid]
 :rfc_2626_link: link:https://www.rfc-editor.org/rfc/rfc822[RFC 2616]
-:trmnl_liquid_gem_link: link:https://github.com/usetrmnl/trmnl-liquid[TRMNL Liquid]
+:superfluid_link: link:https://alchemists.io/projects/superfluid[Superfluid]
 :trmnl_sensor_scanner_link: link:https://github.com/usetrmnl/sensor_scanner[Sensor Scanner]
 
 = Extensions
@@ -78,9 +78,115 @@ To help you get started, let's walk through a scenario building an extension:
 
 At this point you can schedule when your extension will automatically rebuilt or you can click the _Build_ button to force an immediate build. All output will show up via the _Screens_ page.
 
-== Liquid Templates
+== Liquid
 
-All extensions use {liquid_link} templates which allows you to format and style raw data into HTML for rendering as a screen. This includes default functionality and enhanced functionality as provided by the {trmnl_liquid_gem_link} gem.
+All extensions use {liquid_link} templates as powered by the {superfluid_link} gem. This means you have access to all filters and tags supported by the following gems and this application:
+
+* {liquid_link}: The base layer and unique to Liquid.
+* {superfluid_link}: Unique to Superfluid.
+* *Terminus*: Unique to this application only (not part of Liquid or Superfluid).
+
+=== Filters
+
+The following filters are supported:
+
+* `abs`
+* `append`
+* `at_least`
+* `at_most`
+* `base64_decode`
+* `base64_encode`
+* `base64_url_safe_decode`
+* `base64_url_safe_encode`
+* `capitalize`
+* `ceil`
+* `compact`
+* `concat`
+* `date`
+* `default`
+* `divided_by`
+* `downcase`
+* `escape`
+* `escape_once`
+* `find`
+* `find_index`
+* `first`
+* `floor`
+* `h`
+* `has`
+* `join`
+* `jsonify`
+* `last`
+* `lstrip`
+* `map`
+* `minus`
+* `modulo`
+* `newline_to_br`
+* `parse_json`
+* `pluralize`
+* `plus`
+* `prepend`
+* `reject`
+* `remove`
+* `remove_first`
+* `remove_last`
+* `replace`
+* `replace_first`
+* `replace_last`
+* `reverse`
+* `round`
+* `rstrip`
+* `singularize`
+* `size`
+* `slice`
+* `sort`
+* `sort_natural`
+* `split`
+* `squish`
+* `strip`
+* `strip_html`
+* `strip_newlines`
+* `sum`
+* `times`
+* `trim_end`
+* `trim_middle`
+* `truncate`
+* `truncatewords`
+* `uniq`
+* `upcase`
+* `url_decode`
+* `url_encode`
+* `where`
+
+You can find documentation for the above via the {liquid_link} and {superfluid_link} gems. More documentation for the filters, that are unique to Terminus, will be provided in the future.
+
+=== Tags
+
+The following tags are supported within your Liquid templates:
+
+* `#`
+* `assign`
+* `break`
+* `capture`
+* `case`
+* `comment`
+* `continue`
+* `cycle`
+* `decrement`
+* `doc`
+* `echo`
+* `for`
+* `if`
+* `ifchanged`
+* `include`
+* `increment`
+* `raw`
+* `render`
+* `tablerow`
+* `template`
+* `unless`
+
+You can find documentation for the above via the {liquid_link} and {superfluid_link} gems. More documentation for the tags, that are unique to Terminus, will be provided in the future.
 
 == Schedules
 
@@ -120,3 +226,7 @@ This allows each device to answer an empty array, a single record, or multiple r
 === Server
 
 You can attach sensors to your Raspberry PI which allows you to access sensor records when building extensions. This is fully explained in the link:/doc/raspberry_pi.adoc[Raspberry Pi Documentation] for this project.
+
+== API
+
+Extensions have a robust API which is of great aid when not always needing the UI. For further detaails, check out the link:https://github.com/usetrmnl/terminus/blob/main/doc/api.adoc[API Documentation].

@@ -9,33 +9,20 @@
   </header>
 
   <div class="bit-body">
-    <figure class="device"
-            hx-ext="sse"
-            hx-swap="innerHTML"
-            sse-connect="/preview/<%= current_screen_id %>"
-            sse-swap="preview">
+    <%= tag.figure class: :device,
+                  **HTMX[
+                    "sse:connect" => "/preview/#{current_screen_id}",
+                    "on:preview" => "this.innerHTML = event.detail.data"
+                  ] do %>
       <%= render :loader %>
-    </figure>
+    <% end %>
 
-    <%= form_for :template,
+    <%= form_for :design,
                  routes.path(:design, id: template.id),
                  method: :put,
                  id: :form,
                  class: "bit-card bit-form" do |form| %>
       <h1 class="label">Edit Design</h1>
-
-      <%= scope(:form_field, key: :screen_id, errors:).render do %>
-        <label class="key" for="screen_id">
-          Screen
-          <%= render "shared/popovers/triggers/default", name: :screen %>
-        </label>
-
-        <%= tag.select id: :screen_id, name: :screen_id, class: :value do %>
-          <% screens.each do |screen| %>
-            <%= tag.option screen.label, value: screen.id %>
-          <% end %>
-        <% end %>
-      <% end %>
 
       <%= render "shared/fields",
                  form:,
@@ -45,6 +32,19 @@
                  fields:,
                  errors: %>
 
+      <%= scope(:form_field, key: :screen_id, errors:).render do %>
+        <label class="key" for="screen_id">
+          Screen
+          <%= scope(:popover_trigger_button, tip: :info, target: :screen).render %>
+        </label>
+
+        <%= tag.select id: :screen_id, name: :screen_id, class: :value do %>
+          <% screens.each do |screen| %>
+            <%= tag.option screen.label, value: screen.id %>
+          <% end %>
+        <% end %>
+      <% end %>
+
       <div class="form-actions">
         <%= form.submit "Save",
                         class: "bit-button-accept",
@@ -52,11 +52,13 @@
                           put: routes.path(:design, id: template.id),
                           trigger: "click, keyup[ctrlKey&&key=='s'] from:body",
                           select_oob: "#form",
-                          disabled_elt: "this"
+                          disable: "this"
                         ] %>
 
         <%= link_to "Cancel", routes.path(:designs), class: "bit-button-decline" %>
       </div>
     <% end %>
   </div>
+
+  <%= scope(:tooltip_action_content, label: "Info").render %>
 </section>

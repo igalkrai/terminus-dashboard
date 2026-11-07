@@ -14,6 +14,7 @@ module Terminus
           class Creator
             include Deps[
               "aspects.unzipper",
+              "aspects.errors.detailer",
               extension_creator: "aspects.extensions.importers.local.creators.extension",
               exchange_creator: "aspects.extensions.importers.local.creators.exchange"
             ]
@@ -25,28 +26,26 @@ module Terminus
             ]
             include Dry::Monads[:result]
 
-            def initialize(schema: Schemas::Import, error_joiner: Errors::ResultJoiner, **)
+            def initialize(schema: Schemas::Import, **)
               @schema = schema
-              @error_joiner = error_joiner
               super(**)
             end
 
             # :reek:TooManyStatements
-            # rubocop:todo Metrics/AbcSize
+            # rubocop:todo-next Metrics/AbcSize
             def call io, attributes: {}
               unzipper.call(io)
                       .fmap { |entries| transform entries }
                       .fmap { attributes.replace it }
                       .bind { schema.call(it).to_monad }
-                      .alt_map { error_joiner.call "Import", it }
+                      .alt_map { detailer.call it, "Import " }
                       .bind { extension_creator.call attributes }
                       .bind { create_exchanges it, attributes }
             end
-            # rubocop:enable Metrics/AbcSize
 
             private
 
-            attr_reader :schema, :error_joiner
+            attr_reader :schema
 
             def transform entries
               entries.transform_keys!(key_map).then { {**it, **YAML.load(it[:configuration])} }

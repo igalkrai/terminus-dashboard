@@ -14,7 +14,7 @@ RSpec.describe Terminus::Aspects::Errors::Problem do
       CONTENT
 
       expect(problem_detail.duplicate(message, "/api/test")).to eq(
-        Petail[
+        RFC::API::Problem[
           type: "/problem_details#duplicate_value",
           status: :conflict,
           detail: %(Label must be unique. Please use a value other than "Demo".),
@@ -32,7 +32,7 @@ RSpec.describe Terminus::Aspects::Errors::Problem do
       CONTENT
 
       expect(problem_detail.enum(message, "/api/test")).to eq(
-        Petail[
+        RFC::API::Problem[
           type: "/problem_details#invalid_enum",
           status: :unprocessable_content,
           detail: %(Invalid value for mode: "other". Use: "automatic" or "manual".),
@@ -51,10 +51,25 @@ RSpec.describe Terminus::Aspects::Errors::Problem do
       CONTENT
 
       expect(problem_detail.foreign_key(message, "/api/test")).to eq(
-        Petail[
+        RFC::API::Problem[
           type: "/problem_details#invalid_foreign_key",
           status: :unprocessable_content,
           detail: "Invalid `playlist_id` value: 29. Does not exist.",
+          instance: "/api/test"
+        ]
+      )
+    end
+  end
+
+  describe ".out_of_range" do
+    it "answers payload" do
+      message = "PG::NumericValueOutOfRange: ERROR:  integer out of range"
+
+      expect(problem_detail.out_of_range(message, "/api/test")).to eq(
+        RFC::API::Problem[
+          type: "/problem_details#invalid_numeric",
+          status: :unprocessable_content,
+          detail: "Integer out of range. Use a smaller value.",
           instance: "/api/test"
         ]
       )

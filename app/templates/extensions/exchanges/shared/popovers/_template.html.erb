@@ -1,3 +1,12 @@
 <%= scope(:popover_default_content, name: :template, label: "Template").render do %>
-  <p>The <%= link_to "Liquid", "https://shopify.github.io/liquid" %> template for building HTTP requests.</p>
+  <p>The list of URIs for making HTTP requests to acquire source data for your extension. Each URI must be delimited by a new line and can include <%= link_to "Liquid", "https://shopify.github.io/liquid" %> syntax. The following file formats are supported:</p>
+
+  <ul>
+    <li><strong>Calendar</strong>: Parse calendar data (<code>.ical</code>).</li>
+    <li><strong>CSV</strong>: Parse Comma Separated Values (<code>.csv</code>).</li>
+    <li><strong>Image</strong>: Parse image URIs (<code>.jpg</code>, <code>.bmp</code>, <code>.png</code>, and more).</li>
+    <li><strong>JSON</strong>: Parse JavaScript Object Notation data (<code>.json</code>).</li>
+    <li><strong>Text</strong>: Parse plain text (<code>.txt</code>).</li>
+    <li><strong>XML</strong>: Parse Extensible Markup Language data (<code>.xml</code>).</li>
+  </ul>
 <% end %>

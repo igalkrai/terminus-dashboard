@@ -5,16 +5,17 @@ module Terminus
     module Extensions
       # The delete action.
       class Delete < Action
-        include Deps["aspects.jobs.schedule", repository: "repositories.extension"]
+        include Deps["aspects.extensions.deleter"]
+
+        using Terminus::Refines::Actions::Response
+
+        params { required(:id).filled :integer }
 
         def handle request, response
-          extension = repository.find request.params[:id]
-
-          halt :unprocessable_content unless extension
-
-          repository.delete extension.id
-          schedule.delete extension.screen_name
-          response.body = ""
+          case deleter.call request.params.to_h, validator: contract
+            in Success then response.with body: ""
+            else halt :unprocessable_content
+          end
         end
       end
     end

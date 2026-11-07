@@ -17,8 +17,20 @@ RSpec.describe Terminus::Views::Helpers do
     end
   end
 
+  describe ".default_option" do
+    it "answers default when found" do
+      record = Data.define(:id, :label).new 1, "Test"
+      expect(helper.default_option([record], "Test")).to eq(["Test", 1])
+    end
+
+    it "answers empty array when not found" do
+      record = Data.define(:id, :label).new 1, "Test"
+      expect(helper.default_option([record], "Invalid")).to eq(["Select...", nil])
+    end
+  end
+
   describe ".field_for" do
-    let(:record) { Data.define(:label).new label: "Test" }
+    let(:record) { Data.define(:label, :formatted_label).new label: "One", formatted_label: "" }
     let(:attributes) { {label: "Other"} }
 
     it "answers nil for missing attributes key and no record" do
@@ -31,7 +43,12 @@ RSpec.describe Terminus::Views::Helpers do
 
     it "answers record value when attribute is missing" do
       attributes.clear
-      expect(helper.field_for(:label, attributes, record)).to eq("Test")
+      expect(helper.field_for(:label, attributes, record)).to eq("One")
+    end
+
+    it "answers attributes value when key includes prefix and errors are present" do
+      errors = {label: "danger"}
+      expect(helper.field_for(:formatted_label, attributes, record, errors:)).to eq("Other")
     end
 
     it "answers formatted Sequel time string when an instance of SQL Time" do
@@ -45,7 +62,7 @@ RSpec.describe Terminus::Views::Helpers do
     end
   end
 
-  describe "#field_included?" do
+  describe ".field_included?" do
     let(:record) { Data.define(:days).new days: %w[monday wednesday friday] }
     let(:attributes) { {days: ["wednesday"]} }
 
@@ -62,7 +79,7 @@ RSpec.describe Terminus::Views::Helpers do
     end
   end
 
-  describe "#git_sha_link" do
+  describe ".git_sha_link" do
     let(:kernel) { class_double Kernel }
 
     it "answers version link when latest and tag SHAs match" do
@@ -88,7 +105,7 @@ RSpec.describe Terminus::Views::Helpers do
     end
   end
 
-  describe "#git_latest_link" do
+  describe ".git_latest_link" do
     it "answers version link when latest and tag SHAs match" do
       expect(helper.git_latest_link).to eq(
         %(<a class="link" href="https://github.com/usetrmnl/terminus/commit/abcdefghijkl">) \
@@ -97,7 +114,7 @@ RSpec.describe Terminus::Views::Helpers do
     end
   end
 
-  describe "#git_version_link" do
+  describe ".git_version_link" do
     it "answers version link when latest and tag SHAs match" do
       expect(helper.git_version_link).to eq(
         %(<a class="link" href="https://alchemists.io/projects/terminus/versions/1.2.3/">) \
@@ -126,7 +143,7 @@ RSpec.describe Terminus::Views::Helpers do
     end
   end
 
-  describe "#pluralize" do
+  describe ".pluralize" do
     it "answers one" do
       expect(helper.pluralize("test", "s", 1)).to eq("1 test")
     end
@@ -136,7 +153,25 @@ RSpec.describe Terminus::Views::Helpers do
     end
   end
 
-  describe "#select_options_for" do
+  describe ".select_options" do
+    it "answers options" do
+      list = {one: "One", two: "Two"}
+
+      expect(helper.select_options(list)).to eq(
+        [
+          ["Select...", ""],
+          ["One", :one],
+          ["Two", :two]
+        ]
+      )
+    end
+
+    it "answers prompt when given an empty array" do
+      expect(helper.select_options([])).to contain_exactly(["Select...", ""])
+    end
+  end
+
+  describe ".select_options_for" do
     it "answers record options" do
       record = Data.define(:id, :label).new 1, "Test"
       expect(helper.select_options_for([record])).to eq([["Select...", ""], ["Test", 1]])
@@ -145,7 +180,7 @@ RSpec.describe Terminus::Views::Helpers do
     it "answers record options with custom label" do
       record = Data.define(:id, :title).new 1, "Test"
 
-      expect(helper.select_options_for([record], label: :title)).to eq(
+      expect(helper.select_options_for([record], key_map: {label: :title})).to eq(
         [
           ["Select...", ""],
           ["Test", 1]
@@ -156,7 +191,7 @@ RSpec.describe Terminus::Views::Helpers do
     it "answers record options with custom ID" do
       record = Data.define(:name, :label).new "test", "Test"
 
-      expect(helper.select_options_for([record], id: :name)).to eq(
+      expect(helper.select_options_for([record], key_map: {id: :name})).to eq(
         [
           ["Select...", ""],
           ["Test", "test"]
@@ -169,7 +204,7 @@ RSpec.describe Terminus::Views::Helpers do
     end
   end
 
-  describe "#size" do
+  describe ".size" do
     it "answers zero if nil" do
       expect(helper.size(nil)).to eq("0.0 B")
     end
